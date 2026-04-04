@@ -1,0 +1,489 @@
+No-GPU Setup Guide
+Free API Providers for RAG Bootcamp
+When You Don’t Have a GPU — Use These Free, OpenAI-Compatible APIs
+
+AI-PMS RAG Bootcamp — Companion Guide
+
+CONFIDENTIAL — Kernex Microsystems / TEL Internal
+
+AI-PMS RAG Bootcamp | No-GPU Setup Guide | v1.0
+
+Kernex Microsystems / TEL — Confidential | Page 2
+
+1. The No-GPU Strategy
+The GPREC HPC cluster does not currently have GPUs provisioned for the RAG bootcamp. This is not a
+blocker. The bootcamp can run entirely on free cloud APIs for LLM inference and on CPU for embeddings.
+1.1 What Runs Where
+Component Runs On Provider Cost
+LLM Inference
+(generation)
+
+Free Cloud API Groq (primary) Free — no credit
+
+card
+
+LLM Inference
+(fallback)
+
+Free Cloud API Google AI Studio Free — no credit
+
+card
+
+Embedding Generation Local CPU sentence-
+transformers
+
+Free — open source
+
+Embedding (if CPU too
+slow)
+
+Free Cloud API HuggingFace
+Inference API
+
+Free tier
+
+Cross-Encoder
+Reranking
+
+Local CPU sentence-
+transformers
+
+Free — open source
+
+Vector Store Local CPU PostgreSQL +
+pgvector
+
+Free — open source
+Graph Store Local CPU Apache AGE Free — open source
+BM25 Search Local CPU PostgreSQL pg_trgm Free — built-in
+
+✅ KEY POINT: Only LLM inference needs a GPU
+Embeddings (all-MiniLM-L6-v2 is only 80MB), reranking (ms-marco-MiniLM is ~130MB), pgvector,
+Apache AGE, and BM25 all run fine on CPU. The only bottleneck is LLM text generation, and free
+cloud APIs solve that completely.
+
+AI-PMS RAG Bootcamp | No-GPU Setup Guide | v1.0
+
+Kernex Microsystems / TEL — Confidential | Page 3
+2. Free LLM API Providers — Ranked by Priority
+2.1 Groq — PRIMARY (Fastest, Free, No Credit Card)
+Sign Up URL https://console.groq.com — Email or Google account, no credit card
+
+required
+
+Models Available (Free) Llama 3.3 70B Versatile, Llama 3.1 8B Instant, Mixtral 8x7B, Gemma
+
+2 9B
+
+Rate Limits (Free Tier) ~30 RPM (requests/min), ~14,400 RPD (requests/day), ~6,000 TPM
+
+(tokens/min)
+
+API Compatibility OpenAI-compatible — use the openai Python library with a different
+
+base_url
+
+Speed Extremely fast — 700+ tokens/sec on their LPU hardware.
+
+Responses feel near-instant.
+
+Best For All RAG generation, query routing, HyDE, multi-query rewriting,
+
+RAGAS evaluation
+
+Setup Code
+# Step 1: Install
+pip install openai
+# Step 2: Get API key from https://console.groq.com/keys
+# Save it as environment variable:
+export GROQ_API_KEY=gsk_xxxxxxxxxxxxxxxxxx
+
+Python Usage — Drop-in Replacement for vLLM
+from openai import OpenAI
+import os
+# This is the ONLY line that changes vs. a local vLLM setup
+client = OpenAI(
+base_url=&quot;https://api.groq.com/openai/v1&quot;,
+api_key=os.environ.get(&quot;GROQ_API_KEY&quot;)
+)
+# Use exactly like you would with vLLM or any OpenAI-compatible API
+response = client.chat.completions.create(
+model=&quot;llama-3.3-70b-versatile&quot;, # Free! 70B model!
+messages=[
+{&quot;role&quot;: &quot;system&quot;, &quot;content&quot;: &quot;You are an AI assistant for a metro rail
+project.&quot;},
+{&quot;role&quot;: &quot;user&quot;, &quot;content&quot;: &quot;What is the time-bar period for delay claims under
+FIDIC?&quot;}
+],
+temperature=0.1,
+
+AI-PMS RAG Bootcamp | No-GPU Setup Guide | v1.0
+
+Kernex Microsystems / TEL — Confidential | Page 4
+
+max_tokens=1024
+)
+answer = response.choices[0].message.content
+print(answer)
+
+LangChain Integration
+from langchain_openai import ChatOpenAI
+llm = ChatOpenAI(
+base_url=&quot;https://api.groq.com/openai/v1&quot;,
+api_key=os.environ.get(&quot;GROQ_API_KEY&quot;),
+model=&quot;llama-3.3-70b-versatile&quot;,
+temperature=0.1
+)
+# Use in any LangChain chain or LangGraph agent as normal
+response = llm.invoke(&quot;Summarize the contractor obligations in FIDIC Red Book&quot;)
+
+�� PITFALL: Rate Limits on Groq Free Tier
+30 requests/minute means 1 request every 2 seconds. For RAGAS evaluation over 80+ queries, add
+a time.sleep(2) between calls or you will get 429 errors. For batch experiments, queue requests and
+respect limits. The daily limit (~14,400 requests) is generous enough for the entire bootcamp.
+
+AI-PMS RAG Bootcamp | No-GPU Setup Guide | v1.0
+
+Kernex Microsystems / TEL — Confidential | Page 5
+2.2 Google AI Studio — FALLBACK (Best Free Model Quality)
+Sign Up URL https://aistudio.google.com — Google account, no credit card
+Models Available (Free) Gemini 2.5 Flash, Gemini 2.0 Flash, Gemini 2.5 Pro (limited)
+Rate Limits (Free) ~1,000 requests/day, 1M token context window
+Best For Complex reasoning tasks, document analysis, long-context queries
+
+(1M tokens!), PDF/image analysis
+
+# Install Google&#39;s SDK
+pip install google-genai
+# Get API key from https://aistudio.google.com/apikey
+export GOOGLE_API_KEY=AIzaxxxxxxxxxxxxxxxx
+
+from google import genai
+client = genai.Client(api_key=os.environ.get(&quot;GOOGLE_API_KEY&quot;))
+response = client.models.generate_content(
+model=&quot;gemini-2.5-flash&quot;,
+contents=&quot;Explain the FIDIC time-bar mechanism for delay claims&quot;
+)
+print(response.text)
+
+2.3 HuggingFace Inference API — For Embeddings (if CPU is too slow)
+Sign Up URL https://huggingface.co/settings/tokens — Free account
+Free For Embedding generation via API (sentence-transformers models
+
+hosted free)
+
+Best For Batch embedding of large corpus if local CPU takes too long
+
+import requests
+HF_TOKEN = os.environ.get(&quot;HF_TOKEN&quot;) # Get from huggingface.co/settings/tokens
+MODEL_ID = &quot;sentence-transformers/all-MiniLM-L6-v2&quot;
+API_URL = f&quot;https://api-inference.huggingface.co/pipeline/feature-extraction/{MODEL_ID}&quot;
+def get_embeddings(texts):
+response = requests.post(
+API_URL,
+headers={&quot;Authorization&quot;: f&quot;Bearer {HF_TOKEN}&quot;},
+json={&quot;inputs&quot;: texts}
+
+AI-PMS RAG Bootcamp | No-GPU Setup Guide | v1.0
+
+Kernex Microsystems / TEL — Confidential | Page 6
+
+)
+return response.json() # Returns list of embedding vectors
+embeddings = get_embeddings([&quot;tunnel boring machine&quot;, &quot;OHE catenary&quot;])
+
+2.4 OpenRouter — BACKUP (Multiple Free Models)
+Sign Up URL https://openrouter.ai — Free account, no credit card
+Free Models Look for models with :free suffix (DeepSeek, Llama 3.2, Mistral 7B)
+API Compatibility OpenAI-compatible
+Best For Backup when Groq rate limit is hit. Testing different model sizes.
+
+client = OpenAI(
+base_url=&quot;https://openrouter.ai/api/v1&quot;,
+api_key=os.environ.get(&quot;OPENROUTER_API_KEY&quot;)
+)
+response = client.chat.completions.create(
+model=&quot;deepseek/deepseek-chat-v3-0324:free&quot;, # Note the :free suffix
+messages=[{&quot;role&quot;: &quot;user&quot;, &quot;content&quot;: &quot;Your query here&quot;}]
+)
+
+2.5 Cerebras — BACKUP (Fast Inference, Free Tier)
+Sign Up URL https://cloud.cerebras.ai — Free tier available
+Models Llama 3.3 70B, Llama 3.1 8B
+API Compatibility OpenAI-compatible
+
+client = OpenAI(
+base_url=&quot;https://api.cerebras.ai/v1&quot;,
+api_key=os.environ.get(&quot;CEREBRAS_API_KEY&quot;)
+)
+
+AI-PMS RAG Bootcamp | No-GPU Setup Guide | v1.0
+
+Kernex Microsystems / TEL — Confidential | Page 7
+3. What Runs Locally on CPU (No API Needed)
+3.1 Embedding Models on CPU
+Sentence-transformers embedding models are small enough to run on CPU. Slower than GPU but perfectly
+usable for bootcamp-scale data (1000–5000 chunks).
+pip install sentence-transformers
+from sentence_transformers import SentenceTransformer
+# These models run fine on CPU:
+model = SentenceTransformer(&quot;all-MiniLM-L6-v2&quot;) # 80MB, 384-dim, ~100 chunks/sec on
+CPU
+# model = SentenceTransformer(&quot;BAAI/bge-large-en-v1.5&quot;) # 1.3GB, 1024-dim, ~20 chunks/sec
+on CPU
+# model = SentenceTransformer(&quot;nomic-ai/nomic-embed-text-v1.5&quot;) # 550MB, 768-dim
+chunks = [&quot;tunnel boring machine specifications&quot;, &quot;OHE catenary installation&quot;, ...]
+embeddings = model.encode(chunks, show_progress_bar=True, batch_size=32)
+print(f&quot;Generated {len(embeddings)} embeddings of dimension {embeddings.shape[1]}&quot;)
+
+Model Size Dim CPU Speed* Recommende
+
+d
+
+all-MiniLM-L6-v2 80 MB 384 ~100
+chunks/sec
+
+Start here
+BAAI/bge-large-en-v1.5 1.3 GB 1024 ~20 chunks/sec Best quality
+nomic-embed-text-v1.5 550 MB 768 ~40 chunks/sec Good middle
+ground
+* Approximate speed on modern Intel/AMD CPU with 16GB RAM. Actual speed depends on hardware.
+
+3.2 Cross-Encoder Reranking on CPU
+Cross-encoders are more compute-intensive than bi-encoders but still viable on CPU for small batch sizes (top-
+30 candidates).
+from sentence_transformers import CrossEncoder
+reranker = CrossEncoder(&quot;cross-encoder/ms-marco-MiniLM-L-12-v2&quot;) # ~130MB
+# Rerank top-30 retrieved chunks
+query = &quot;What is the time-bar period for FIDIC delay claims?&quot;
+pairs = [(query, chunk) for chunk in retrieved_chunks[:30]]
+scores = reranker.predict(pairs) # ~2-5 seconds on CPU for 30 pairs
+# Sort by reranking score
+ranked = sorted(zip(scores, retrieved_chunks[:30]), reverse=True)
+top_5 = [chunk for _, chunk in ranked[:5]]
+
+AI-PMS RAG Bootcamp | No-GPU Setup Guide | v1.0
+
+Kernex Microsystems / TEL — Confidential | Page 8
+
+⚠️ CPU LATENCY NOTE
+Reranking 30 chunks takes ~2–5 seconds on CPU vs. ~200–500ms on GPU. For the bootcamp this
+is fine. For production, GPU reranking will be needed. Record the CPU latency in your experiment
+logs so the architecture decision document captures this trade-off.
+3.3 Everything Else (CPU, No API)
+These components are all CPU-native and need zero cloud APIs:
+• PostgreSQL + pgvector — vector similarity search runs on CPU. HNSW index for speed.
+• PostgreSQL pg_trgm + tsvector — BM25 keyword search. Pure CPU.
+• Apache AGE — graph traversal on CPU. No GPU needed for graph queries.
+• ChromaDB — in-memory vector store for rapid prototyping. CPU only.
+• FAISS (faiss-cpu) — Facebook’s ANN library, CPU version. For benchmarking.
+• LangChain / LangGraph / LlamaIndex — orchestration frameworks. CPU.
+• RAGAS — evaluation framework. Uses LLM API calls (Groq) for evaluation, not local GPU.
+• MLflow — experiment tracking. Web server on CPU.
+
+AI-PMS RAG Bootcamp | No-GPU Setup Guide | v1.0
+
+Kernex Microsystems / TEL — Confidential | Page 9
+4. Building a Fallback Chain (Important!)
+Free APIs have rate limits. Build a fallback chain so your experiments don’t crash when one provider hits its
+limit.
+from openai import OpenAI
+import time
+# Configure all providers
+PROVIDERS = {
+&quot;groq&quot;: {
+&quot;base_url&quot;: &quot;https://api.groq.com/openai/v1&quot;,
+&quot;api_key&quot;: os.environ.get(&quot;GROQ_API_KEY&quot;),
+&quot;model&quot;: &quot;llama-3.3-70b-versatile&quot;
+},
+&quot;openrouter&quot;: {
+&quot;base_url&quot;: &quot;https://openrouter.ai/api/v1&quot;,
+&quot;api_key&quot;: os.environ.get(&quot;OPENROUTER_API_KEY&quot;),
+&quot;model&quot;: &quot;deepseek/deepseek-chat-v3-0324:free&quot;
+},
+&quot;cerebras&quot;: {
+&quot;base_url&quot;: &quot;https://api.cerebras.ai/v1&quot;,
+&quot;api_key&quot;: os.environ.get(&quot;CEREBRAS_API_KEY&quot;),
+&quot;model&quot;: &quot;llama-3.3-70b&quot;
+}
+}
+def query_llm(messages, provider_order=[&quot;groq&quot;, &quot;openrouter&quot;, &quot;cerebras&quot;]):
+&quot;&quot;&quot;Try each provider in order. Fall back on 429 or error.&quot;&quot;&quot;
+for provider_name in provider_order:
+config = PROVIDERS[provider_name]
+try:
+client = OpenAI(base_url=config[&quot;base_url&quot;], api_key=config[&quot;api_key&quot;])
+response = client.chat.completions.create(
+model=config[&quot;model&quot;],
+messages=messages,
+temperature=0.1,
+max_tokens=1024
+)
+return response.choices[0].message.content, provider_name
+except Exception as e:
+print(f&quot;{provider_name} failed: {e}. Trying next...&quot;)
+time.sleep(1)
+raise Exception(&quot;All providers failed&quot;)
+# Usage
+answer, provider = query_llm([{&quot;role&quot;: &quot;user&quot;, &quot;content&quot;: &quot;Your RAG query here&quot;}])
+print(f&quot;Answer from {provider}: {answer}&quot;)
+
+✅ PRO TIP: Log Which Provider Was Used
+In your experiment logs, always record which API provider generated the answer. Different LLMs
+
+AI-PMS RAG Bootcamp | No-GPU Setup Guide | v1.0
+
+Kernex Microsystems / TEL — Confidential | Page 10
+
+produce different quality results. If you compare retrieval strategies but the LLM changes between
+experiments due to failover, your comparison is invalid. Control for the LLM variable.
+
+AI-PMS RAG Bootcamp | No-GPU Setup Guide | v1.0
+
+Kernex Microsystems / TEL — Confidential | Page 11
+
+5. Day 0 Setup Checklist
+Complete ALL of these before the bootcamp starts. Estimated time: 2–3 hours.
+☐ Task Time Verify
+☐ Sign up at console.groq.com and generate
+API key
+
+5 min Run test query, get
+response
+
+☐ Sign up at aistudio.google.com and get API
+key
+
+5 min Run test query
+
+☐ Sign up at huggingface.co and create
+access token
+
+5 min Test embedding API
+
+call
+
+☐ Sign up at openrouter.ai (backup) 5 min Test with a :free
+model
+☐ Sign up at cloud.cerebras.ai (backup) 5 min Test query
+☐ pip install openai sentence-transformers
+langchain langgraph llama-index ragas
+mlflow chromadb umap-learn pdfplumber
+
+10 min import each, no
+errors
+
+☐ Install PostgreSQL + pgvector + pg_trgm on
+GPREC HPC
+
+30 min CREATE
+
+EXTENSION vector;
+works
+
+☐ Download all-MiniLM-L6-v2 model (runs on
+first .encode() call, ~80MB)
+
+5 min model.encode([&quot;test&quot;]
+) returns array
+
+☐ Download bge-large-en-v1.5 and nomic-
+embed-text for comparison
+
+15 min Both .encode() work
+
+☐ Download cross-encoder/ms-marco-MiniLM-
+L-12-v2 for reranking
+
+5 min .predict() works on
+test pair
+
+☐ Save all API keys as environment variables
+in .env file (NOT in code)
+
+5 min os.environ.get()
+returns keys
+
+☐ Run the fallback chain code from Section 4
+end-to-end
+
+5 min Gets answer from
+
+Groq
+
+☐ Create Git repo: aipms-rag-bootcamp.
+Commit initial setup.
+
+5 min Git log shows commit
+
+�� CRITICAL: Never Commit API Keys to Git
+Store all API keys in a .env file that is listed in .gitignore. Use python-dotenv or os.environ.get() to
+access them. If a key is accidentally committed, revoke it immediately and generate a new one.
+
+AI-PMS RAG Bootcamp | No-GPU Setup Guide | v1.0
+
+Kernex Microsystems / TEL — Confidential | Page 12
+6. What Changes in the Bootcamp Plan
+The bootcamp plan documents reference vLLM + Llama 3.1 8B for local LLM inference. With the no-GPU
+setup, here is what changes:
+Bootcamp Step Original (GPU) No-GPU Replacement
+LLM for RAG generation vLLM + Llama 3.1 8B (local) Groq API + Llama 3.3 70B
+
+(cloud)
+
+LLM for query routing vLLM + Llama 3.1 8B (local) Groq API + Llama 3.1 8B Instant
+
+(cloud, faster)
+
+LLM for HyDE generation vLLM + Llama 3.1 8B (local) Groq API + Llama 3.3 70B
+
+(cloud)
+
+LLM for multi-query
+rewriting
+
+vLLM + Llama 3.1 8B (local) Groq API + Llama 3.1 8B Instant
+
+(cloud)
+
+LLM for RAGAS evaluation vLLM + Llama 3.1 8B (local) Groq API + Llama 3.3 70B
+(cloud, add rate limiting)
+
+LLM for contextual chunk
+enrichment
+
+vLLM + Llama 3.1 8B (local) Groq API (add rate limiting —
+this is batch, many calls)
+
+Embedding models GPU-accelerated sentence-
+
+transformers
+
+CPU sentence-transformers
+(slower, same quality)
+
+Cross-encoder reranking GPU-accelerated CPU (2–5s for 30 candidates vs.
+
+200–500ms)
+
+Latency measurements Meaningful for production sizing NOT meaningful for production
+— note this in every log
+
+✅ THE SILVER LINING: You Get a Better LLM for Free
+Groq gives free access to Llama 3.3 70B — which is significantly more capable than the Llama 3.1
+8B you would have run locally. Your RAG answers and RAGAS evaluations will actually be BETTER
+quality during the bootcamp than they would have been with a local 8B model. The trade-off is
+latency (network round-trip) and rate limits.
+6.1 Latency Caveat
+Because LLM inference goes over the network to Groq/Google, the latency numbers in your experiments will
+NOT reflect production performance on GPREC hardware. In every experiment log, note:
+• Retrieval latency (local pgvector) — THIS IS MEANINGFUL, record it carefully
+• Reranking latency (local CPU) — MEANINGFUL but will be faster on GPU, note the CPU penalty
+• LLM generation latency (Groq API) — NOT MEANINGFUL for production. Record it but flag it as ‘cloud
+API, not production representative’
+• End-to-end latency — Report but note that LLM component will change in production
+
+AI-PMS RAG Bootcamp | No-GPU Setup Guide | v1.0
+
+Kernex Microsystems / TEL — Confidential | Page 13
+End of Guide —

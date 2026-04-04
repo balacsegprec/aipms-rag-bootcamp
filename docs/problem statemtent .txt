@@ -1,0 +1,2 @@
+Considering in rail project as NLP engineer role for developing contract clause agent suggest how tocreate pipeline for extraction of different contracts that can be mapped for respective disciplines orsub stations and also let se suggest how many RAG pipelines startegies exists for suitable contexts (metros and raikway)?
+Also let me know how to enbeeed vectors and suitable databases for processing effectively. If I have one of contrasts and also let eknow the challenges that are involved

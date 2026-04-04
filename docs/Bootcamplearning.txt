@@ -1,0 +1,1148 @@
+Enterprise RAG Implementation
+Comprehensive Learning &amp; Experimentation Plan
+
+In the Context of AI-PMS for DMRC
+
+Prepared for: K. Bala Chowdappa &amp; NLP Team, GPREC
+Project: AI-PMS (Agentic AI Project Management System)
+Client: DMRC (Delhi Metro Rail Corporation)
+Date: March 2026 | Version: 1.0
+CONFIDENTIAL — Kernex Microsystems / TEL Internal
+
+AI-PMS | Enterprise RAG Learning Plan v1.0
+
+Kernex Microsystems / TEL — Confidential | Page 2
+
+1. Purpose &amp; Context
+This document provides a structured, phased learning plan for building enterprise-grade Retrieval-
+Augmented Generation (RAG) capabilities within the AI-PMS platform. It is designed for K. Bala
+Chowdappa (NLP lead, GPREC) and the students working under his guidance.
+The plan transitions from the initial AntiGravity IDE prototype to production-ready RAG pipelines that will
+power the Contract Agent (A04), Document Agent (A13), NL Query chatbot, and all other agents requiring
+semantic search over AI-PMS’s unstructured content.
+1.1 What This Plan Is NOT
+• A theoretical NLP course — this is hands-on, experiment-driven, and anchored to real AI-PMS
+entities
+• A reproduction of the AntiGravity IDE approach — we are moving FROM drag-and-drop TO code-
+first, observable, testable pipelines
+• An excuse to skip fundamentals — every shortcut in RAG compounds into production failures
+1.2 The AI-PMS RAG Landscape
+Per the CDM Schema v1.0 (Section 11), the following entities require vector embeddings and semantic
+retrieval:
+CDM Entity Embedding Source Agent Consumer &amp; Use Case
+Contract Clause clause_text chunked at 512
+
+tokens
+
+Contract Agent (A04) — semantic clause
+search, FIDIC-specific retrieval
+
+Correspondence Full text of notices and letters Contract Agent — precedent search, time-
+
+bar analysis
+
+Drawing/Document Title + description + revision
+
+notes
+
+Document Agent (A13) — superseded
+drawing detection, auto-classification
+Incident Report Narrative text EHS Agent — pattern matching, similar
+
+incident search
+
+NCR Description Root cause + corrective action Quality Agent — systemic issue detection,
+
+CAPA effectiveness
+
+Meeting Minutes Action items and decisions Communication Agent — decision
+
+traceability
+
+Historical (STAMP) Extracted RFI/NCR/progress
+
+text
+
+Training corpus for all agents
+
+⚠️ CRITICAL PRINCIPLE: Synthetic Data is NOT Real Data
+The DMRC Mega Metro dataset is AI-generated. It is valid ONLY for parser testing, UI development,
+and pipeline validation. It CANNOT be used for ML model training, business rule calibration, or
+intelligence threshold validation. Every experiment in this plan must clearly label whether it uses
+synthetic data (acceptable for pipeline testing) or will require real data (deferred to post-DMRC
+engagement).
+
+AI-PMS | Enterprise RAG Learning Plan v1.0
+
+Kernex Microsystems / TEL — Confidential | Page 3
+
+AI-PMS | Enterprise RAG Learning Plan v1.0
+
+Kernex Microsystems / TEL — Confidential | Page 4
+
+2. Phased Learning Roadmap
+The plan is structured into 6 phases over 12–14 weeks. Each phase has clear entry criteria, exit criteria,
+deliverables, and pitfall warnings.
+Phase Focus Area Duration Team Dependency
+Phase 0 Foundations &amp; Unlearning Week 1–2 Chowdappa + 2
+students
+
+None
+
+Phase 1 Naive RAG — Build, Break,
+
+Measure
+
+Week 3–4 Chowdappa + 3
+students
+
+Phase 0 exit
+
+Phase 2 Advanced Retrieval
+Strategies
+
+Week 5–7 Full NLP team Phase 1 exit
+
+Phase 3 Domain-Specific RAG for AI-
+
+PMS
+
+Week 8–9 Full NLP team Phase 2 exit
+
+Phase 4 Agentic RAG &amp; Multi-Hop
+
+Retrieval
+
+Week 10–11 NLP + AI/ML
+team
+
+Phase 3 exit
+
+Phase 5 Evaluation, Hardening &amp;
+Production Readiness
+
+Week 12–14 Full team Phase 4 exit
+
+AI-PMS | Enterprise RAG Learning Plan v1.0
+
+Kernex Microsystems / TEL — Confidential | Page 5
+
+3. Phase 0: Foundations &amp; Unlearning (Weeks 1–2)
+Before writing a single line of RAG code, the team must build a shared mental model of what enterprise
+RAG actually requires and unlearn the patterns from no-code tools that will not scale.
+3.1 Core Concepts to Master
+3.1.1 Embeddings — From First Principles
+• What is a vector embedding? Why does cosine similarity work for semantic search?
+• Experiment: Take 20 FIDIC contract clauses (use synthetic data). Embed with sentence-
+transformers (all-MiniLM-L6-v2). Visualize with UMAP. Do related clauses cluster? Do they NOT?
+• Experiment: Repeat with a domain-specific model (BAAI/bge-large-en-v1.5). Compare clusters.
+Document findings.
+Observation to record: Are metro-rail domain terms (e.g., ‘tunnel boring machine’, ‘ballastless track’,
+‘OHE catenary’) meaningfully separated from general terms? If not, this tells you generic embeddings
+may fail for AI-PMS.
+3.1.2 Chunking — The Underestimated Bottleneck
+Most RAG failures trace back to bad chunking, not bad models. The team must understand why.
+• Read and summarize: Greg Kamradt’s chunking research (5 levels of text splitting)
+• Experiment with each strategy on a sample FIDIC Red Book chapter:
+Strategy Implementation When It Fails
+Fixed-size (512
+tokens)
+
+LangChain CharacterTextSplitter Cuts mid-clause, mid-sentence.
+Loses legal meaning.
+
+Recursive character LangChain
+
+RecursiveCharacterTextSplitter
+
+Better but still section-unaware. A
+notice period clause split across
+chunks loses its binding force.
+
+Semantic chunking LlamaIndex
+
+SemanticSplitterNodeParser
+
+Good for narrative text. Poor for
+structured contracts where clause
+numbering is the structure.
+
+Document-structure-
+aware
+
+Custom parser respecting heading
+hierarchy (clause 20.1 → sub-clause
+20.1.1)
+
+Best for contracts but requires per-
+document-type parser. Cannot
+generalize across DPRs, NCRs, and
+contracts with one parser.
+
+Parent-child /
+hierarchical
+
+Small chunks for retrieval, return
+parent chunk for context. LlamaIndex
+AutoMergingRetriever.
+
+Needs careful calibration of
+parent/child sizes. Too-large parents
+dilute precision.
+
+�� PITFALL: One-Size-Fits-All Chunking
+AI-PMS has fundamentally different document types: legal contracts (structured, hierarchical), DPRs
+(tabular + narrative), NCRs (form-based), correspondence (letter format), meeting minutes (action-
+item lists). A single chunking strategy WILL fail. The team must build and test document-type-specific
+chunkers.
+
+AI-PMS | Enterprise RAG Learning Plan v1.0
+
+Kernex Microsystems / TEL — Confidential | Page 6
+
+3.1.3 Vector Stores — Not Just a Database
+Install and run queries against at least TWO of the following. Do NOT just read documentation — load the
+same 1000 synthetic chunks and run identical queries:
+Vector Store Why Test It AI-PMS Relevance Deployment Notes
+pgvector
+(PostgreSQL)
+
+Our production target.
+Co-located with relational
+data.
+
+PRIMARY: CDM Section
+13 specifies this as
+production store.
+
+Already in our stack.
+On-prem friendly.
+
+ChromaDB Easy local development.
+Good for rapid
+prototyping.
+
+DEVELOPMENT ONLY.
+Not for production.
+
+pip install, zero config.
+Good for student
+learning.
+
+Weaviate CDM lists as secondary
+index. Hybrid search
+built-in.
+
+SECONDARY: High-
+throughput vector search
+if pgvector becomes
+bottleneck.
+
+Docker deployment.
+Review if truly needed
+at pilot scale.
+
+FAISS Meta’s library. Fastest for
+
+pure ANN. No
+persistence.
+
+BENCHMARK ONLY.
+Useful for comparing
+retrieval speed.
+
+In-memory. Good for
+A/B testing retrieval
+quality.
+
+✅ RECOMMENDED CONSOLIDATION
+For the pilot, consolidate on PostgreSQL + pgvector + Apache AGE rather than maintaining separate
+Weaviate, ChromaDB, and PostgreSQL systems. This reduces operational complexity for sovereign
+on-prem deployment. Test Weaviate in Phase 2 but do not assume it will be in production.
+3.2 Phase 0 Exit Criteria
+1. Each team member can explain embeddings, chunking, indexing, and retrieval without
+referencing AntiGravity IDE
+2. A Jupyter notebook exists showing UMAP cluster visualization of 3 different embedding models
+on FIDIC clause data
+3. A comparison table of chunking strategies with at least 5 queries tested per strategy, showing
+retrieved chunks and relevance scores
+4. pgvector is running locally with synthetic AI-PMS data loaded
+
+AI-PMS | Enterprise RAG Learning Plan v1.0
+
+Kernex Microsystems / TEL — Confidential | Page 7
+
+4. Phase 1: Naive RAG — Build, Break, Measure (Weeks 3–4)
+Build the simplest possible end-to-end RAG pipeline, then systematically break it. The purpose of this
+phase is to develop intuition for failure modes.
+4.1 Build the Baseline Pipeline
+4.1.1 Architecture (Keep It Simple)
+Documents → Chunker → Embedder → pgvector → Query Embedder → Top-K Retrieval → LLM
+(prompt: system + retrieved chunks + user query) → Answer
+4.1.2 Tech Stack for Phase 1
+Component Tool Rationale
+Embedding Model sentence-transformers/all-MiniLM-
+
+L6-v2 (384-dim)
+
+Small, fast, good baseline.
+Compare against later.
+
+Vector Store pgvector (via psycopg2 or
+
+SQLAlchemy)
+
+Production target. Learn the SQL
+interface now.
+
+Chunking LangChain
+
+RecursiveCharacterTextSplitter (512
+tokens, 50 overlap)
+
+Known-weak baseline. Will be
+improved later.
+
+LLM Llama 3.1 8B (via vLLM on GPREC
+HPC) OR Claude API for
+comparison
+
+Test BOTH local and API-based.
+Note quality differences.
+Orchestration Plain Python (no framework) Understand what frameworks
+abstract away BEFORE using
+them.
+
+Evaluation Manual relevance scoring on 50
+
+hand-crafted queries
+
+Build evaluation instinct before
+automated metrics.
+
+4.2 The Breaking Experiments
+For each experiment below, the team must write a 1-page finding report: what happened, why it
+happened, what it teaches about production RAG.
+4.2.1 Experiment: Query-Document Mismatch
+Query: “What is the time-bar period for delay claims under FIDIC Yellow Book?”
+Expected failure: If chunks are from FIDIC Red Book, the system will hallucinate an answer using Red
+Book clauses as if they were Yellow Book clauses. The LLM will NOT say ‘I don’t know.’
+Observation: Does the system cite the source contract type? Does it distinguish between
+Red/Yellow/Silver Book? This is CRITICAL for the Contract Agent (A04) which must retrieve FIDIC-
+specific clauses per contract_standard field.
+4.2.2 Experiment: Cross-Entity Confusion
+
+AI-PMS | Enterprise RAG Learning Plan v1.0
+
+Kernex Microsystems / TEL — Confidential | Page 8
+
+Load NCR descriptions AND contract clauses into the same vector space. Query: “What corrective action
+should be taken for concrete honeycombing?”
+Expected failure: The retriever will mix NCR corrective actions with contract clauses about defect
+liability. The answer will blend operational advice with legal obligations.
+Lesson: This is why metadata filtering and namespace separation matter. AI-PMS must tag every chunk
+with its entity_type, package_id, and tenant_id.
+4.2.3 Experiment: The Long-Document Problem
+Load a full 100-page contract. Query: “Summarize the contractor’s obligations.”
+Expected failure: Top-K retrieval (K=5) returns 5 chunks from a 100-page document. The ‘summary’ is
+based on 2% of the document. This is not summarization; it is sampling bias.
+Lesson: Different query intents need different retrieval strategies. Factoid queries work with top-K.
+Summarization queries need document-level strategies (map-reduce, refine).
+4.3 Phase 1 Pitfall Catalog
+Pitfall How It Manifests How to Detect
+Embedding model too small Domain terms like ‘OHE catenary’
+or ‘ballastless track slab’ collapse
+into generic vectors
+
+Compare cosine similarity of
+domain vs. generic terms. If
+domain pairs score &lt; 0.6, the
+model is too weak.
+
+K is too small Misses relevant chunks. Answers
+
+are confidently wrong.
+
+Vary K from 3 to 20. Plot answer
+quality vs. K. Find the elbow.
+
+K is too large Context window flooded with
+irrelevant chunks. LLM gets
+confused.
+
+Same experiment. Look for
+quality DROP at high K.
+
+No metadata filtering Cross-tenant data leakage. Cross-
+
+entity confusion.
+
+Query as Metro tenant. Check if
+IR/DFCC data appears.
+
+Prompt template too generic LLM ignores retrieved chunks and
+answers from its own knowledge.
+Hallucination.
+
+Add a known-wrong chunk. Does
+the LLM still cite it? It shouldn’t.
+
+No citation / source tracking User cannot verify where the
+answer came from. Zero trust in a
+HITL system.
+
+Every answer must include chunk
+IDs and source document
+references.
+
+4.4 Phase 1 Exit Criteria
+1. Working end-to-end naive RAG pipeline with pgvector, queryable via Python script
+2. At least 3 documented failure modes with root cause analysis
+3. Baseline metrics on 50 queries: Precision@K, Recall@K, and answer correctness (manual
+labels)
+4. A written document: ‘Why Naive RAG Is Not Production-Ready for AI-PMS’ (1–2 pages)
+
+AI-PMS | Enterprise RAG Learning Plan v1.0
+
+Kernex Microsystems / TEL — Confidential | Page 9
+
+5. Phase 2: Advanced Retrieval Strategies (Weeks 5–7)
+This is the experimentation-heavy phase. The team must implement, test, and compare multiple retrieval
+strategies head-to-head. No strategy is adopted without evidence.
+5.1 Strategy Matrix — What to Build and Compare
+Strategy Implementation AI-PMS Use Case Expected Improvement
+
+Over Naive
+
+Hybrid Search
+(BM25 + Vector)
+
+pgvector for dense +
+pg_trgm or
+Elasticsearch for BM25.
+Reciprocal Rank
+Fusion.
+
+Contract clause search
+where exact legal terms
+matter (‘Force Majeure’ ≠
+‘unforeseeable event’)
+
+Catches exact-match
+queries that pure vector
+misses. Critical for legal
+precision.
+
+Cross-Encoder
+Reranking
+
+Retrieve top-50 with bi-
+encoder, rerank with
+cross-encoder (ms-
+marco-MiniLM-L-12-v2)
+
+All high-stakes queries
+where precision matters
+more than latency
+
+10–25% improvement in
+Precision@5 typical.
+Adds 200–500ms latency.
+
+Metadata-
+Filtered Retrieval
+
+Pre-filter by entity_type,
+tenant_id, package_id
+before vector search
+
+Multi-tenant isolation.
+Entity-specific search
+(only NCRs, only
+contracts)
+
+Eliminates cross-entity
+and cross-tenant pollution
+entirely.
+
+HyDE
+(Hypothetical
+Document
+Embedding)
+
+LLM generates a
+hypothetical answer,
+embed that, search with
+it
+
+When user queries are
+vague: ‘What should I do
+about the delay?’
+
+Bridges query-document
+vocabulary gap. Works
+when user is non-
+technical.
+
+Multi-Query
+Retrieval
+
+LLM rewrites user query
+into 3–5 variations,
+retrieve for each, union
+results
+
+Ambiguous queries from
+site engineers who don’t
+use precise terminology
+
+Improves recall for under-
+specified queries at cost
+of extra LLM calls.
+
+Parent-Child
+Retrieval
+
+Index small chunks (256
+tokens), return parent
+chunk (1024 tokens) for
+context
+
+Contract clauses where
+sub-clauses need parent
+clause context
+
+Better context without
+sacrificing retrieval
+precision.
+
+Contextual
+Retrieval
+(Anthropic-style)
+
+Prepend LLM-
+generated context to
+each chunk before
+embedding (situating
+the chunk)
+
+DPRs and NCRs where
+chunks lose meaning
+without context
+
+Up to 49% reduction in
+retrieval failures per
+Anthropic’s research.
+
+5.2 The Comparison Framework
+Every strategy must be evaluated on the SAME query set (minimum 100 queries covering all entity
+types). Record:
+
+AI-PMS | Enterprise RAG Learning Plan v1.0
+
+Kernex Microsystems / TEL — Confidential | Page 10
+
+• Retrieval metrics: Precision@5, Precision@10, Recall@10, MRR (Mean Reciprocal Rank),
+NDCG@10
+• Answer quality: Faithfulness (is the answer grounded in retrieved chunks?), Relevance (does it
+answer the question?), Completeness
+• Latency: p50, p95, p99 for retrieval and for end-to-end
+• Cost: Number of LLM calls, embedding calls, total tokens consumed
+�� PITFALL: Optimizing Retrieval Without Measuring Answer Quality
+A retriever that returns all relevant chunks but in the wrong order can still produce terrible answers.
+The LLM has a recency bias (favors chunks at the end of the context) and a primacy bias (favors
+chunks at the start). Measure BOTH retrieval quality AND answer quality. They are not the same
+thing.
+5.3 Tech Stack Expansion for Phase 2
+Component Options to Test Decision Criteria
+Embedding Models (a) all-MiniLM-L6-v2 (384d) (b)
+BAAI/bge-large-en-v1.5 (1024d) (c)
+nomic-embed-text (768d) (d) Cohere
+embed-english-v3.0 (API)
+
+Domain term separation quality,
+index size vs. recall trade-off, on-
+prem vs. API feasibility
+
+Reranking Models (a) cross-encoder/ms-marco-
+MiniLM-L-12-v2 (b) BAAI/bge-
+reranker-large (c) Cohere rerank API
+
+Precision improvement vs. latency
+trade-off. Must run on GPREC
+GPUs for production.
+
+Sparse Search (a) PostgreSQL pg_trgm + tsvector
+(b) Elasticsearch/OpenSearch (c)
+BM25 via rank_bm25 Python library
+
+Operational simplicity (pg_trgm is
+zero-new-infra) vs. feature
+richness
+
+Orchestration Framework (a) LangChain (b) LlamaIndex (c)
+Haystack (d) Custom Python
+
+Flexibility for AI-PMS-specific logic.
+Avoid framework lock-in.
+
+5.4 Observations Log Template
+For each experiment, the team must maintain a structured log:
+Field What to Record
+Experiment ID E.g., EXP-P2-003 (Phase 2, Experiment 3)
+Hypothesis What you expect to happen and why
+Strategy Tested Exact configuration (chunk size, K, model, fusion weights)
+Dataset Which documents, how many chunks, synthetic vs. real
+Retrieval Metrics P@5, P@10, Recall@10, MRR, NDCG@10
+Answer Metrics Faithfulness, relevance, completeness (manual or RAGAS)
+Latency p50, p95, p99 — retrieval and end-to-end
+Surprising Finding What did you NOT expect? This is the most important field.
+
+AI-PMS | Enterprise RAG Learning Plan v1.0
+
+Kernex Microsystems / TEL — Confidential | Page 11
+
+Production Implication What does this mean for the AI-PMS architecture decision?
+
+5.5 Phase 2 Exit Criteria
+1. At least 5 retrieval strategies implemented and compared on the same 100-query evaluation set
+2. A ranked recommendation: which strategy for which entity type and query pattern
+3. Hybrid search (BM25 + vector + RRF) working end-to-end with pgvector + pg_trgm
+4. Cross-encoder reranking benchmarked with latency measurements on GPREC hardware
+5. At least 3 embedding models compared with domain-specific evaluation
+
+AI-PMS | Enterprise RAG Learning Plan v1.0
+
+Kernex Microsystems / TEL — Confidential | Page 12
+
+6. Phase 3: Domain-Specific RAG for AI-PMS (Weeks 8–9)
+Now the team applies everything learned to build AI-PMS-specific retrieval pipelines. This phase
+produces components that will go into the actual system.
+6.1 Document-Type-Specific Chunkers
+Build separate chunking pipelines for each major AI-PMS document type:
+Document Type Chunking Strategy Metadata to Extract &amp; Tag
+FIDIC Contract Hierarchical: Clause → Sub-clause.
+Preserve numbering (20.1, 20.1.1).
+Parent-child linkage.
+
+contract_standard
+(Red/Yellow/Silver), clause_number,
+section_title, tenant_id
+
+Correspondence /
+Notice
+
+Full letter as single chunk (most are &lt;
+512 tokens). If longer, split by
+paragraph.
+
+sender, receiver, date, notice_type,
+reference_number, contract_id,
+package_id
+
+DPR Section-based: separate progress
+narrative from tabular data. Tables →
+structured extraction, not chunking.
+
+date, package_id,
+reporting_engineer,
+activities_referenced
+
+NCR Form-field extraction. Root cause and
+corrective action as separate retrievable
+chunks.
+
+ncr_number, severity,
+root_cause_category, status,
+package_id
+
+Meeting Minutes Action-item extraction. Each action item
+as a chunk with attendee and deadline
+metadata.
+
+meeting_date, attendees,
+action_owner, deadline, status
+
+Drawing/Document Title + description + revision notes
+concatenated. Short chunks.
+
+drawing_number, revision,
+superseded_by, discipline,
+package_id
+
+6.2 Metadata Schema for Retrieval
+Every chunk stored in pgvector MUST have the following metadata fields (enforced at ingestion, not
+optional):
+• tenant_id (MANDATORY — multi-tenancy isolation via RLS)
+• entity_type (contract_clause | correspondence | dpr | ncr | meeting_minutes | drawing |
+incident_report)
+• package_id (which contract package this belongs to)
+• source_document_id (traceable back to CDM Document entity)
+• chunk_index (position within document for ordering)
+• parent_chunk_id (for hierarchical retrieval)
+• created_at / updated_at (for temporal filtering — ‘latest revision only’)
+6.3 GraphRAG Exploration
+
+AI-PMS | Enterprise RAG Learning Plan v1.0
+
+Kernex Microsystems / TEL — Confidential | Page 13
+
+The CDM defines 195 interface relationships across 23 subsystems. Some queries require traversing
+relationships, not just similarity search.
+Example query: “Which signalling activities are blocked by civil works delays in Package CC-07?”
+This requires: Activity → Dependency → Activity (cross-subsystem) → Package filter. Pure vector search
+cannot answer this. The team should experiment with:
+• Apache AGE (graph extension for PostgreSQL) — preferred because it stays within our
+PostgreSQL stack
+• Build a small knowledge graph from the Metro Rail Systems Taxonomy (383+ entries, 195
+interfaces)
+• Implement GraphRAG: graph traversal for structural queries, vector search for semantic queries,
+router that picks the right strategy
+�� PITFALL: GraphRAG Without Clear Use Cases
+Do not build a knowledge graph because it sounds sophisticated. Build it because specific AI-PMS
+queries REQUIRE relationship traversal that vector search cannot provide. The team must document
+at least 10 queries that NEED graph traversal and 10 that DO NOT, and show the difference in
+answer quality.
+6.4 Phase 3 Exit Criteria
+1. Document-type-specific chunkers for at least 4 entity types, with quality validation
+2. Metadata-enriched pgvector schema with tenant isolation tested
+3. GraphRAG prototype on Metro Rail Systems Taxonomy with 10 relationship-traversal queries
+4. A routing decision matrix: which retrieval strategy for which query pattern
+
+AI-PMS | Enterprise RAG Learning Plan v1.0
+
+Kernex Microsystems / TEL — Confidential | Page 14
+
+7. Phase 4: Agentic RAG &amp; Multi-Hop Retrieval (Weeks 10–11)
+This phase connects RAG to the AI-PMS agent framework (LangGraph StateGraph with Supervisor
+Agent orchestrating domain agents).
+7.1 Agentic RAG Pattern
+Instead of a single retrieve-then-generate cycle, an agent decides WHAT to retrieve, evaluates the
+results, and iterates:
+User Query → Agent plans retrieval steps → Step 1: retrieve contract clauses → Evaluate: enough info?
+→ No → Step 2: retrieve correspondence → Evaluate: enough? → Yes → Generate answer with citations
+7.1.1 Implementation with LangGraph
+Build a LangGraph StateGraph where:
+• State includes: query, retrieved_chunks (list), retrieval_history, confidence_score, iteration_count
+• Nodes: query_analyzer, retriever, evaluator, answer_generator, citation_builder
+• Edges: evaluator → retriever (loop if insufficient) OR evaluator → answer_generator (if sufficient)
+• Guard: max 3 retrieval iterations to prevent infinite loops
+7.2 Multi-Hop Queries — The Real Test
+These are the queries that justify the agentic approach:
+Multi-Hop Query Example Required Retrieval Steps
+“Is the contractor at risk of a time-bar miss
+on Package CC-07?”
+
+Step 1: Retrieve notices for CC-07. Step 2: Retrieve
+FIDIC time-bar clauses. Step 3: Compare notice dates
+against time-bar deadlines. Step 4: Generate risk
+assessment.
+
+“What NCRs are related to activities on
+the critical path?”
+
+Step 1: Identify critical path activities (SQL query, not
+vector search). Step 2: Find NCRs linked to those
+activities (metadata filter). Step 3: Retrieve NCR
+descriptions (vector search for narrative context).
+
+“Compare progress on civil works across
+all packages this month.”
+
+Step 1: Retrieve latest DPRs per package (temporal +
+metadata filter). Step 2: Extract progress metrics
+(structured data, not RAG). Step 3: Generate comparison
+narrative.
+
+✅ KEY INSIGHT: RAG is Not Always the Answer
+Some AI-PMS queries need SQL (quantitative: ‘What is the CPI for CC-07?’), some need graph
+traversal (relational: ‘What depends on this activity?’), some need vector search (semantic: ‘Find
+similar NCRs’), and many need a combination. The agent’s query analyzer must ROUTE to the right
+retrieval strategy, not default to vector search for everything.
+7.3 Tool Integration for Agents
+
+AI-PMS | Enterprise RAG Learning Plan v1.0
+
+Kernex Microsystems / TEL — Confidential | Page 15
+
+Each agent should have access to multiple retrieval tools:
+• vector_search(query, entity_type, filters) → semantic retrieval from pgvector
+• sql_query(query) → structured data from PostgreSQL (EVM, schedules, counts)
+• graph_traverse(start_node, relationship, depth) → relationship traversal via Apache AGE
+• document_fetch(document_id) → full document retrieval for summarization tasks
+7.4 Phase 4 Exit Criteria
+1. LangGraph-based agentic RAG prototype with iterative retrieval and self-evaluation
+2. At least 5 multi-hop queries demonstrated with step-by-step retrieval trace
+3. Query routing working: system correctly selects vector/SQL/graph/hybrid based on query type
+4. Citation chain: every answer traces back to specific chunks with source document IDs
+
+AI-PMS | Enterprise RAG Learning Plan v1.0
+
+Kernex Microsystems / TEL — Confidential | Page 16
+
+8. Phase 5: Evaluation, Hardening &amp; Production Readiness
+(Weeks 12–14)
+8.1 Automated Evaluation with RAGAS
+Move from manual evaluation to automated metrics using the RAGAS framework:
+RAGAS Metric What It Measures Target for AI-PMS
+Faithfulness Is the answer grounded in the retrieved
+context? (Detects hallucination)
+
+&gt; 0.85 for contract-related queries.
+Non-negotiable for HITL system.
+Answer Relevancy Does the answer address the query? &gt; 0.80 across all entity types
+Context Precision Are the retrieved chunks relevant? &gt; 0.75 after reranking
+Context Recall Are all relevant chunks retrieved? &gt; 0.70 (higher for contract queries)
+
+8.2 Building the Evaluation Dataset
+The team must create a golden evaluation dataset:
+• 200+ question-answer-context triples covering all entity types
+• Include adversarial queries: out-of-scope, ambiguous, requires multi-hop, requires SQL not RAG
+• Include tenant-specific queries to validate isolation
+• Get domain expert validation (use the Elicitation Tool) for at least 50 triples
+�� PITFALL: Evaluating Only on Easy Queries
+If your evaluation set is all simple factoid queries, you will get inflated metrics. Include at minimum:
+20% adversarial/out-of-scope, 20% multi-hop, 20% requiring metadata filtering, 20% requiring
+precise legal language, 20% general factoid. Report metrics per category, not just overall.
+8.3 Production Hardening Checklist
+Production Requirement Implementation
+Tenant isolation RLS on pgvector table. Every query MUST include tenant_id
+
+filter. Test with cross-tenant queries.
+
+Embedding pipeline idempotency Re-ingesting the same document must not create duplicate
+
+chunks. Use content hash for deduplication.
+
+Incremental indexing When a document is updated (new revision), old chunks must
+
+be archived, new chunks indexed. Not full re-index.
+Latency SLA compliance NFR-04: Search and retrieval within 5 seconds (p95).
+
+Reranking must fit within this budget.
+
+Fallback behavior When retrieval confidence is low, system MUST say
+‘insufficient data’, NOT hallucinate. Test this explicitly.
+
+AI-PMS | Enterprise RAG Learning Plan v1.0
+
+Kernex Microsystems / TEL — Confidential | Page 17
+
+Audit trail Every retrieval must log: query, retrieved chunk IDs, reranking
+scores, final answer, user feedback. Into AuditEvent (CDM
+Layer 4).
+
+HITL integration All high-stakes outputs (contract advice, risk assessments)
+must be flagged for human review before action.
+
+8.4 Phase 5 Exit Criteria
+1. RAGAS evaluation running on 200+ query golden dataset with per-category metrics
+2. Faithfulness &gt; 0.85 on contract-related queries
+3. End-to-end latency &lt; 5 seconds (p95) on GPREC hardware
+4. Tenant isolation test: zero cross-tenant data leakage in 100 adversarial queries
+5. Complete audit trail for every query-retrieval-answer cycle
+6. Production deployment runbook documenting all configuration, scaling, and monitoring
+procedures
+
+AI-PMS | Enterprise RAG Learning Plan v1.0
+
+Kernex Microsystems / TEL — Confidential | Page 18
+
+9. Student Mentoring Structure
+Chowdappa will have students working under his guidance. Here is how to structure their involvement for
+maximum learning:
+Role Assignment Deliverables Supervision Level
+Student A
+(Strong)
+
+Retrieval strategies
+lead. Implements Phase
+2 experiments.
+
+Comparison report, hybrid
+search implementation,
+reranking pipeline
+
+Weekly review. Can work
+independently.
+
+Student B
+(Strong)
+
+Evaluation pipeline
+lead. Builds RAGAS
+integration.
+
+Golden dataset, automated
+evaluation pipeline, metrics
+dashboard
+
+Weekly review. Needs
+domain context from
+Chowdappa.
+
+Student C Document chunker
+developer. Builds entity-
+type-specific parsers.
+
+Chunkers for FIDIC, NCR,
+DPR, correspondence
+
+Bi-weekly review. Needs
+clear specifications.
+
+Student D Vector store and infra.
+Manages pgvector,
+indexing pipeline.
+
+Ingestion pipeline, index
+management scripts, backup
+procedures
+
+Bi-weekly review. Works
+with DevOps team.
+
+Students E–F Query dataset builders.
+Create and label
+evaluation queries.
+
+200+ labeled Q&amp;A pairs,
+adversarial test cases,
+domain validation
+
+Close supervision. Domain
+knowledge gaps expected.
+
+9.1 Weekly Rituals
+• Monday: 30-min standup — each person shares: what I built, what broke, what I learned
+• Wednesday: Experiment review — one team member presents their latest experiment with data,
+not opinions
+• Friday: Architecture alignment — how does this week’s learning change our production design?
+9.2 Rules for Students
+1. Never commit code without a test that proves the change improved something measurable
+2. Every experiment gets a structured log entry (see Section 5.4 template)
+3. If you don’t understand WHY something works, it’s not done. Accidental success is not learning.
+4. Ask ‘What would break this in production?’ for every implementation decision
+5. Document failures more carefully than successes. Failures are the curriculum.
+
+AI-PMS | Enterprise RAG Learning Plan v1.0
+
+Kernex Microsystems / TEL — Confidential | Page 19
+
+10. Master Pitfall Reference
+A consolidated list of every pitfall referenced in this document, plus additional production pitfalls the team
+will encounter.
+# Pitfall Consequence Prevention
+1 Treating synthetic data
+as real
+
+Overconfident metrics. Models
+tuned to AI-generated patterns.
+
+Label all experiments:
+SYNTHETIC or REAL. Never
+train on synthetic.
+
+2 One chunking strategy
+for all document types
+
+Contract clauses split mid-
+sentence. NCR context lost.
+
+Document-type-specific
+chunkers (Phase 3).
+
+3 No metadata filtering Cross-tenant leakage. Cross-
+entity confusion in answers.
+
+Enforce tenant_id and
+entity_type on every retrieval
+query.
+
+4 Evaluating only on easy
+queries
+
+Inflated metrics. Fails on real
+user queries.
+
+Stratified evaluation: 20%
+adversarial, 20% multi-hop, etc.
+
+5 No fallback behavior System hallucinating when it
+should say ‘I don’t know.’
+
+Implement confidence
+thresholds. Test with out-of-
+scope queries.
+
+6 Ignoring latency budgets Reranking + multi-hop exceeds
+
+5-second SLA.
+
+Measure latency from Phase 1.
+Budget: 2s retrieval, 3s
+generation.
+
+7 No citation chain Users cannot verify answers.
+HITL becomes meaningless.
+
+Every answer must include
+source chunk IDs and document
+references.
+
+8 Framework lock-in LangChain/LlamaIndex
+abstractions hide bugs. Hard to
+debug.
+
+Build naive version first (Phase
+1). Use frameworks only after
+understanding internals.
+
+9 Embedding model never
+updated
+
+Domain vocabulary drifts. New
+terminology not captured.
+
+Re-evaluate embedding model
+quarterly. Consider fine-tuning
+on domain corpus.
+
+10 No monitoring in
+production
+
+Retrieval quality degrades
+silently. Users lose trust.
+
+Log every query. Track retrieval
+score distributions. Alert on drift.
+
+11 Overbuilding GraphRAG Complex infrastructure for
+queries that vector search
+handles fine.
+
+Prove 10 queries need graph
+traversal before building it.
+
+12 AntiGravity IDE patterns
+in production
+
+Black-box pipelines. No
+observability. Cannot debug
+failures.
+
+Code-first, test-first. Every
+component must be
+independently testable.
+
+AI-PMS | Enterprise RAG Learning Plan v1.0
+
+Kernex Microsystems / TEL — Confidential | Page 20
+
+11. Complete Tech Stack Reference
+Layer Development/Learning Production Target Notes
+Vector Store ChromaDB (rapid
+prototyping) + pgvector
+(production path)
+
+PostgreSQL + pgvector Single DB for relational
++ vector = operational
+simplicity
+
+Graph Store Apache AGE
+(PostgreSQL extension)
+
+Apache AGE Stays within
+PostgreSQL. No
+separate Neo4j
+deployment.
+
+Sparse Search pg_trgm + tsvector
+(PostgreSQL built-in)
+
+pg_trgm + tsvector Zero additional
+infrastructure for BM25-
+style search.
+
+Embedding Models all-MiniLM-L6-v2, bge-
+large-en-v1.5, nomic-
+embed-text
+
+Best performer from
+Phase 2 evaluation
+
+Must run on GPREC
+L40S GPUs. On-prem
+constraint.
+
+Reranking ms-marco-MiniLM-L-12-
+v2, bge-reranker-large
+
+Best performer within
+latency budget
+
+Must fit within 5s SLA
+with retrieval.
+
+LLM Inference Llama 3.1 8B (vLLM on
+GPREC) + Claude API
+(comparison)
+
+vLLM on L40S GPUs
+(sovereign deployment)
+
+On-prem for DMRC
+compliance. API for
+development speed.
+
+Orchestration Plain Python (Phase 1)
+→ LangGraph (Phase
+4+)
+
+LangGraph StateGraph Matches agent
+framework architecture
+(Supervisor + domain
+agents).
+
+Evaluation Manual labels (Phase 1)
+→ RAGAS (Phase 5)
+
+RAGAS + custom
+metrics + MLflow
+tracking
+
+MLflow for experiment
+tracking across all
+phases.
+
+Data Pipeline Python scripts (Phase
+0–2) → FastAPI services
+(Phase 3+)
+
+FastAPI microservices +
+Kafka for CDC
+
+Event-driven sync for
+incremental indexing.
+
+Monitoring Jupyter notebooks + print
+statements (early) →
+Prometheus/Grafana
+
+Prometheus + Grafana +
+custom RAG quality
+dashboard
+
+Track retrieval score
+distributions, latency
+percentiles, failure
+rates.
+
+12. Success Metrics &amp; Reporting
+At the end of this 14-week plan, the team should be able to demonstrate:
+1. A working, tested, documented RAG pipeline for AI-PMS with hybrid search, reranking, and
+metadata filtering
+
+AI-PMS | Enterprise RAG Learning Plan v1.0
+
+Kernex Microsystems / TEL — Confidential | Page 21

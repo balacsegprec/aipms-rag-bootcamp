@@ -1,0 +1,71 @@
+
+Subject: RAG Bootcamp Plan for Chowdappa Sir & NLP Team — Complete Package with Datasets & No-GPU Setup
+Dear Madhusudan Sir,
+
+I'm introducing @Vaibhav yerra  and @krishna karri from TEL, for coordination. Vaibhav has already implemented several RAG architectures, his experience can speed up the process.
+
+Please share this with Bala Chowdappa Sir and his NLP team.
+
+I have prepared a complete RAG bootcamp package for Chowdappa Sir to follow with his students. This replaces the AntiGravity IDE approach with a code-first, enterprise-grade implementation path aligned to our AI-PMS architecture.
+
+Four documents are attached:
+
+1. RAG Bootcamp 2 week Plan — Covers embeddings, chunking, hybrid search, reranking, agentic RAG with LangGraph, GraphRAG, and RAGAS evaluation. 100% open source stack, zero API costs.
+
+2. Deliverables Document — Template with 9 architecture diagrams, metrics tables, observation forms, and failure analysis sheets. All [TO FILL] fields must be completed before moving to the next phase.
+
+3. No-GPU Setup Guide — Since GPREC does not have GPUs available right now, this guide shows how to run the entire bootcamp using free cloud APIs (Groq, Google AI Studio, OpenRouter, Cerebras) for LLM inference, and CPU-based sentence-transformers for embeddings. No cost, no credit card needed. Everything is OpenAI-compatible, so the code stays the same when we move to on-prem vLLM later.
+
+4. Extended Reference Plan — The full-length version for what comes after the bootcamp.
+
+
+DATASETS — THREE CORPORA TO USE:
+
+Since FIDIC books are copyrighted and not freely available, the team should use three data sources:
+
+a) Kaggle Enterprise RAG Dataset (for general RAG skills)
+URL: https://www.kaggle.com/datasets/rrr3try/enterprise-rag-markdown
+This contains 100 real annual reports from the Enterprise RAG Challenge, already converted to markdown. Complex documents with tables, numbers, multi-page content. Use this for the early phases: embedding comparison, chunking experiments, naive RAG pipeline, breaking experiments. It will give the team real-world messy documents to learn on.
+
+b) Indian Railways GCC (for contract clause experiments)
+The Indian Railways Standard General Conditions of Contract (GCC 2022) is a government document, freely available. It has the same clause-subclauses hierarchical structure that our contract chunker needs to handle. Download from:
+• IRICEN: https://www.iricen.gov.in/iricen/Works_Manuals/GCC_July_2020.pdf
+• DFCCIL GCC: https://dfccil.com/upload/2_GCC_OOOA.pdf
+• IREPS GCC 2022: https://www.ireps.gov.in/ireps/upload/repository/railway/3482/456083/private/GCC-2022.pdf
+
+Use these for the contract clause chunking experiments. They test the same hierarchical parsing challenges as FIDIC (clause 20.1, sub-clause 20.1.1) and are directly relevant to our IR/DFCC tenant.
+
+c) Synthetic DMRC Dataset (for AI-PMS domain-specific work)
+Our existing AI-generated DMRC Mega Metro data. Use this for domain-specific phases: document-type-specific chunkers (NCRs, DPRs, correspondence, meeting minutes), metadata filtering, tenant isolation testing, and GraphRAG on the Systems Taxonomy. Remember — valid for pipeline testing only, not for model training or threshold calibration.
+
+
+KEY POINTS FOR CHOWDAPPA SIR:
+
+• The plan starts with fundamentals before any framework usage. The initial phase is plain Python only — no LangChain, no LlamaIndex. The team must understand what frameworks abstract away before using them.
+
+• The breaking experiments are the most important part. The team must intentionally break the naive pipeline and document WHY it broke. Skipping this step means building pipelines they cannot debug.
+
+• Every experiment must be logged in the structured format (Section D10 of the Deliverables doc). No experiment without metrics. No metric without an observation.
+
+• The bootcamp plan includes a suggested student assignment matrix with parallel tracks (retrieval strategies, evaluation pipeline, document parsers, infrastructure, query datasets). Once students are assigned, Chowdappa Sir can distribute work based on their skill levels using this as a guide.
+
+• Since there is no GPU, all LLM calls go through Groq’s free API (Llama 3.3 70B). The No-GPU Guide has complete setup instructions and code. The silver lining: Groq gives free access to a 70B model, which is much better than the 8B model we would have run locally.
+
+• One caveat: LLM latency measurements over cloud APIs are NOT production-representative. The team should record them but flag as ‘cloud API’ in every log. Retrieval and reranking latency on local CPU IS meaningful.
+
+
+WHAT I NEED FROM CHOWDAPPA SIR BEFORE STARTING:
+• Confirm how many students will be assigned and their skill levels, so we can finalize the track assignments
+• Confirm GPREC HPC node availability (CPU is sufficient — no GPU needed)
+• Download all three datasets and verify access
+• Sign up for free API keys (Groq, Google AI Studio, HuggingFace, OpenRouter) — instructions in the No-GPU Guide
+• Proposed start date
+
+The exit criteria are in Section 7 of the bootcamp plan. At the end I expect a live demo and a completed deliverables document with evidence-based architecture recommendations.
+
+Please coordinate with Chowdappa Sir on timing and let me know.
+
+Regards,
+Bhanu
+ 4 Attachments
+  •  Scanned by Gmail
