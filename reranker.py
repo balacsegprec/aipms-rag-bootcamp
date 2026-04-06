@@ -1,6 +1,11 @@
 from sentence_transformers import CrossEncoder
+from config.api_config import get_config
 
-model = CrossEncoder('cross-encoder/ms-marco-MiniLM-L-12-v2')
+# Load config
+config = get_config()
+
+# Load model from config
+model = CrossEncoder(config.embedding_models.reranker)
 
 
 def rerank(query, documents, top_k=3):
