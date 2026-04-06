@@ -1,28 +1,29 @@
-import chromadb
+from sklearn.metrics.pairwise import cosine_similarity
 
-client = chromadb.Client()
 
-# Reset collection (important when switching models)
-try:
-    client.delete_collection("rag_demo")
-except:
-    pass
-
-collection = client.get_or_create_collection("rag_demo")
+# Store documents + embeddings in memory
+stored_docs = []
+stored_embeddings = []
 
 
 def add_documents(documents, embeddings):
-    ids = [str(i) for i in range(len(documents))]
+    global stored_docs, stored_embeddings
 
-    collection.add(
-        documents=documents,
-        embeddings=embeddings,
-        ids=ids
-    )
+    stored_docs = documents
+    stored_embeddings = embeddings
 
 
 def query_db(query_embedding, k=6):
-    return collection.query(
-        query_embeddings=query_embedding,
-        n_results=k
-    )
+    global stored_docs, stored_embeddings
+
+    if not stored_docs:
+        return {"documents": [[]]}
+
+    scores = cosine_similarity(query_embedding, stored_embeddings)[0]
+
+    # get top k indices
+    top_k_idx = scores.argsort()[-k:][::-1]
+
+    results = [stored_docs[i] for i in top_k_idx]
+
+    return {"documents": [results]}
