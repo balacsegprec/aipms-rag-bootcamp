@@ -19,13 +19,13 @@ def run_rag(pdf_path, query, model_name="bge"):
     documents = split_text(text)
 
     # 3. Generate embeddings
-    embeddings = get_embeddings(documents, model_name=model_name)
+    embeddings = get_embeddings(documents)
 
     # 4. Store in vector DB (in-memory for now)
     add_documents(documents, embeddings)
 
     # 5. Embed query
-    query_embedding = get_embeddings([query], model_name=model_name)
+    query_embedding = get_embeddings([query])
 
     # 6. Retrieve top documents
     results = query_db(query_embedding, k=6)
