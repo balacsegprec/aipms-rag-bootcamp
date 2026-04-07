@@ -1,22 +1,37 @@
-# RAG Pipeline (Groq + ChromaDB)
-
-## Overview
-A production-ready Retrieval-Augmented Generation (RAG) pipeline using Groq LLM (primary), OpenRouter fallback, sentence-transformers for embeddings, ChromaDB for vector storage, cross-encoder reranking, and MLflow for experiment tracking and evaluation.
-
-## Architecture
-- **Embeddings:** sentence-transformers
-- **Vector Store:** ChromaDB
-- **Reranking:** cross-encoder
-- **LLM:** Groq (primary), OpenRouter (fallback)
-- **Evaluation:** ragas, MLflow
-
-### RAG Flow
-1. Query embedding
 # RAG Bootcamp Setup (No-GPU)
 
 ## Status
 
-Setup phase completed as per bootcamp requirements (CPU + free API setup).
+Day 0 setup completed using CPU-based components and free API services.
+
+---
+
+## Overview
+
+This repository contains a Retrieval-Augmented Generation (RAG) pipeline built as part of the bootcamp setup phase.
+
+The system uses cloud LLM APIs and local CPU-based models to simulate a full RAG workflow.
+
+---
+
+## Architecture
+
+* **Embeddings:** sentence-transformers (CPU)
+* **Vector Store:** ChromaDB (temporary)
+* **Reranking:** cross-encoder (CPU)
+* **LLM:** Groq (primary), OpenRouter (fallback)
+* **Evaluation:** LLM-based scoring + MLflow tracking
+
+---
+
+## RAG Flow
+
+1. Convert query → embedding
+2. Retrieve top-K documents (ChromaDB)
+3. Rerank results (cross-encoder)
+4. Generate answer using LLM (with fallback)
+5. Evaluate output (faithfulness, relevance)
+6. Log metrics (MLflow)
 
 ---
 
@@ -30,7 +45,7 @@ Setup phase completed as per bootcamp requirements (CPU + free API setup).
 * End-to-end RAG pipeline
 * LLM-based evaluation (faithfulness, relevance)
 * MLflow experiment tracking
-* .env-based secret management
+* `.env`-based secret management
 * Docker setup
 
 ---
@@ -41,14 +56,14 @@ Setup phase completed as per bootcamp requirements (CPU + free API setup).
 * pg_trgm (BM25 search)
 * Apache AGE (graph layer)
 * Full fallback chain (Cerebras, Google AI Studio)
-* HuggingFace API for embeddings (optional)
+* HuggingFace API usage for embeddings (optional)
 
 ---
 
 ## Why ChromaDB is Used
 
 PostgreSQL + pgvector requires Linux/WSL setup.
-Current environment (Windows) caused installation issues.
+Current Windows environment caused installation issues.
 
 ChromaDB is used temporarily for local CPU-based prototyping.
 
@@ -65,7 +80,7 @@ python rag_chroma.py
 
 ## Environment Variables
 
-Create `.env`:
+Create `.env` file:
 
 ```
 GROQ_API_KEY=your_key
@@ -86,18 +101,17 @@ docker run --env-file .env rag-pipeline
 
 ## TODO (Next Steps)
 
-- Move to Linux/WSL for full bootcamp infra compatibility
-
-* Setup PostgreSQL + pgvector (WSL/Linux)
+* Move to Linux/WSL for full bootcamp compatibility
+* Setup PostgreSQL + pgvector
 * Replace ChromaDB with pgvector
 * Add BM25 (pg_trgm)
 * Add full fallback chain (Cerebras, Google AI Studio)
 * Add API layer (FastAPI)
-* Improve logging + monitoring
+* Improve logging and monitoring
 
 ---
 
 ## Note
 
-This repository focuses on completing the **Day 0 setup checklist** from the bootcamp guide.
-Further experimentation and optimization are not included yet.
+This repository focuses only on completing the **Day 0 setup checklist**.
+Further experiments and optimizations are not included.
