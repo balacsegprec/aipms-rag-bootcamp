@@ -1,0 +1,18 @@
+# .gitignore for Python projects and sensitive files
+mlflow.db
+.env
+__pycache__/
+mlruns/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+build/
+dist/
+*.egg-info/
+.DS_Store
+*.sqlite3
+*.log
+# VS Code
+.vscode/
