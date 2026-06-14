@@ -9,15 +9,14 @@ import os
 import json
 import datetime
 
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from src.core.pipeline import ask_rag
 from src.evals.metrics import evaluate_generation
-from src.core.retriever import check_table_exists
+from src.core.database.connection import check_table_exists
 
 DATASET_PATH = os.path.join(os.path.dirname(__file__), '..', 'evaluation', 'dataset', 'evaluation_dataset.json')
 RESULTS_DIR  = os.path.join(os.path.dirname(__file__), '..', 'experiments', 'results')
-TENANT_ID    = "default_strategy"
+TENANT_ID = os.getenv("EVAL_TENANT_ID", "default_strategy")
 
 
 def run_baseline_eval():
@@ -45,6 +44,8 @@ def run_baseline_eval():
         res      = ask_rag(query, tenant_id=TENANT_ID)
         answer   = res.get("answer", "")
         context  = res.get("context", "")
+        chunks   = res.get("retrieved_chunks", [])
+        c_ids    = res.get("chunk_ids", [])
         scores   = evaluate_generation(query, context, answer)
         f_score  = scores.get("faithfulness", 0.0)
         r_score  = scores.get("relevance",    0.0)
@@ -60,6 +61,8 @@ def run_baseline_eval():
             "query": query, "expected": expected, "answer": answer,
             "faithfulness": f_score, "relevance": r_score,
             "status": status, "category": category, "source": source,
+            "retrieved_chunks": chunks,
+            "citations": c_ids
         })
 
     # Save results

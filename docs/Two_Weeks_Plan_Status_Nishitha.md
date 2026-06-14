@@ -50,15 +50,15 @@
     *   *Location*: [Final_Deliverables/Documentation_Nishitha.md](file:///home/d_nishitha/AIPMS/aipms-rag-bootcamp/Final_Deliverables/Documentation_Nishitha.md) (Exp 04 - Exp 08).
 *   **Metadata Filtering**: `[✅ COMPLETED]`  
     *   *Resource*: **Real**. Enforced standard tags (`tenant_id`, `entity_type`, `source_document_id`, `package_id`) at chunk level.
-    *   *Location*: [src/core/retriever.py](file:///home/d_nishitha/AIPMS/aipms-rag-bootcamp/src/core/retriever.py).
+    *   *Location*: [src/core/database/connection.py](file:///home/d_nishitha/AIPMS/aipms-rag-bootcamp/src/core/database/connection.py).
 
 #### 🟢 Day 4: Hybrid Search & Cross-Encoder Reranking
 *   **Hybrid BM25 + Vector Search via RRF**: `[✅ COMPLETED]`  
     *   *Resource*: **Real**. Reciprocal Rank Fusion ($k=60$) combining semantic embeddings and trigram keyword indexing.
-    *   *Location*: `src/core/retriever.py#L240-L282`.
+    *   *Location*: `src/core/database/connection.py`.
 *   **Cross-Encoder Reranker Benchmarking**: `[✅ COMPLETED]`  
     *   *Resource*: **Real**. Integrated `ms-marco-MiniLM-L-12-v2` to filter top retrieved chunks.
-    *   *Location*: `src/core/retriever.py`.
+    *   *Location*: [src/core/pipeline.py](file:///home/d_nishitha/AIPMS/aipms-rag-bootcamp/src/core/pipeline.py).
 
 #### 🟢 Day 5: Advanced Retrieval & Evaluation Review
 *   **Advanced Retrieval Strategies**: `[✅ COMPLETED]`  
@@ -72,7 +72,7 @@
 #### 🟢 Day 6: Domain-Specific Chunkers
 *   **Correspondence Paragraph Parser**: `[✅ COMPLETED]`  
     *   *Resource*: **Real Custom Parser**. Extracts stakeholder letter headers (Ref, Date, From, To, Subject) and prepends them to paragraphs.
-    *   *Location*: [scripts/correspondence_chunker_Nishitha.py](file:///home/d_nishitha/AIPMS/aipms-rag-bootcamp/scripts/correspondence_chunker_Nishitha.py).
+    *   *Location*: [src/chunkers/ncr_dpr_chunker.py](file:///home/d_nishitha/AIPMS/aipms-rag-bootcamp/src/chunkers/ncr_dpr_chunker.py).
 *   **Mock Stakeholder Dataset**: `[✅ COMPLETED]`  
     *   *Resource*: **Mock Dataset**. Cleaned all real credentials to use safe pseudo names (`Ganga`, `Yamuna`, `Simhadri`) and company (`Energy Kernel`).
     *   *Location*: [data/correspondence/](file:///home/d_nishitha/AIPMS/aipms-rag-bootcamp/data/correspondence/) containing `let_001` to `let_005`.
@@ -80,30 +80,30 @@
 #### 🟡 Day 7: Query Router & GraphRAG
 *   **LLM-based Query Router**: `[✅ COMPLETED]`  
     *   *Resource*: **Real LLM Classifier**. Uses Llama 3.1 via Groq with failovers (OpenRouter ➔ Cerebras ➔ Gemini) and heuristic bypass.
-    *   *Location*: [src/core/query_router_Nishitha.py](file:///home/d_nishitha/AIPMS/aipms-rag-bootcamp/src/core/query_router_Nishitha.py).
+    *   *Location*: [src/agents/query_router.py](file:///home/d_nishitha/AIPMS/aipms-rag-bootcamp/src/agents/query_router.py).
 *   **GraphRAG Systems Taxonomy Ingestion**: `[⚠️ PAUSED & FAILSAFED]`  
     *   *Resource*: **Mock Graph rel-join traversal**. Paused Apache AGE ingestion because the 383-entry taxonomy raw file usage has to be confirmed yet.
     *   *Failsafe*: Programmed relational hierarchical self-joins (`retrieve_graph`) to traverse connected sibling chunks from document indexes, proving "Graph Layer" capabilities locally.
-    *   *Location*: [src/core/retriever.py#L284-L302](file:///home/d_nishitha/AIPMS/aipms-rag-bootcamp/src/core/retriever.py#L284-L302) and [docs/Architecture_Decision_Document_Nishitha.md](file:///home/d_nishitha/AIPMS/aipms-rag-bootcamp/docs/Architecture_Decision_Document_Nishitha.md) Section 5 GraphRAG Viability Matrix.
+    *   *Location*: [src/core/graph_rag.py](file:///home/d_nishitha/AIPMS/aipms-rag-bootcamp/src/core/graph_rag.py) and [docs/Architecture_Decision_Document_Nishitha.md](file:///home/d_nishitha/AIPMS/aipms-rag-bootcamp/docs/Architecture_Decision_Document_Nishitha.md) Section 5 GraphRAG Viability Matrix.
 
 #### 🟢 Day 8: Agentic RAG with LangGraph StateGraph
 *   **State Machine Orchestration**: `[✅ COMPLETED]`  
     *   *Resource*: **Real**. Implemented an iterative LangGraph StateGraph (`query_analyzer` ➔ `retriever` ➔ `evaluator` ➔ `answer_generator`) supporting up to 3 self-correction loops.
-    *   *Location*: [src/core/agent_Nishitha.py](file:///home/d_nishitha/AIPMS/aipms-rag-bootcamp/src/core/agent_Nishitha.py).
+    *   *Location*: [src/agents/langgraph_agent.py](file:///home/d_nishitha/AIPMS/aipms-rag-bootcamp/src/agents/langgraph_agent.py).
 *   **Failsafe Retrieval Offline Fallback**: `[✅ COMPLETED]`  
     *   *Resource*: **Real Local Fallback Search**. Created a local filesystem word-overlap matcher to search letters and JSON logs when PostgreSQL is offline.
-    *   *Location*: [scripts/test_agent_Nishitha.py](file:///home/d_nishitha/AIPMS/aipms-rag-bootcamp/scripts/test_agent_Nishitha.py).
+    *   *Location*: [tests/integration/test_agent.py](file:///home/d_nishitha/AIPMS/aipms-rag-bootcamp/tests/integration/test_agent.py).
 
 #### 🟢 Day 9: Production Hardening Essentials
 *   **Row-Level Security (RLS) Isolation**: `[✅ COMPLETED]`  
     *   *Resource*: **Real**. Activated PostgreSQL RLS policy on `rag_documents`. Confirmed **0 leaks** between tenants.
-    *   *Location*: [src/core/hardening_Nishitha.py](file:///home/d_nishitha/AIPMS/aipms-rag-bootcamp/src/core/hardening_Nishitha.py#L70-L105).
+    *   *Location*: [src/core/security/protection.py](file:///home/d_nishitha/AIPMS/aipms-rag-bootcamp/src/core/security/protection.py#L70-L105).
 *   **Unique Hash Ingestion Idempotency**: `[✅ COMPLETED]`  
     *   *Resource*: **Real**. Blocked duplicate chunks using SHA-256 database constraint hashes.
-    *   *Location*: `src/core/hardening_Nishitha.py`.
+    *   *Location*: `src/core/security/protection.py`.
 *   **Out-of-Scope Fallback Interceptor**: `[✅ COMPLETED]`  
     *   *Resource*: **Real**. Intercepted **10/10 adversarial queries** (Paris capital, cricket rules, USA president, etc.) to safely return exactly `"Insufficient data to answer this query."` in under 46ms.
-    *   *Location*: [scripts/test_hardening_Nishitha.py](file:///home/d_nishitha/AIPMS/aipms-rag-bootcamp/scripts/test_hardening_Nishitha.py).
+    *   *Location*: [tests/unit/test_security.py](file:///home/d_nishitha/AIPMS/aipms-rag-bootcamp/tests/unit/test_security.py).
 *   **CDM Layer 4 Audit Trail**: `[✅ COMPLETED]`  
     *   *Resource*: **Real**. Logged every transaction to PostgreSQL audit tables and local JSON ledgers.
     *   *Location*: [experiments/results/hardening_test_Nishitha.md](file:///home/d_nishitha/AIPMS/aipms-rag-bootcamp/experiments/results/hardening_test_Nishitha.md).
@@ -111,7 +111,7 @@
 #### 🟢 Day 10: FastAPI & Interactive Demo
 *   **FastAPI Service Web Wrapper**: `[✅ COMPLETED]`  
     *   *Resource*: **Real API Schema**. Exposed RAG endpoints via `POST /query`.
-    *   *Location*: [src/api_Nishitha.py](file:///home/d_nishitha/AIPMS/aipms-rag-bootcamp/src/api_Nishitha.py).
+    *   *Location*: [src/api/main.py](file:///home/d_nishitha/AIPMS/aipms-rag-bootcamp/src/api/main.py).
 *   **10 Diverse Live Queries Client Demo**: `[✅ COMPLETED]`  
     *   *Resource*: **Real Client test suite**. Run and parsed HTTP request/response payloads over TestClient, confirming audit logging.
     *   *Location*: [experiments/results/api_test_Nishitha.md](file:///home/d_nishitha/AIPMS/aipms-rag-bootcamp/experiments/results/api_test_Nishitha.md).

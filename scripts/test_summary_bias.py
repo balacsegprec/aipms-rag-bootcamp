@@ -1,7 +1,6 @@
 import sys
 import os
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-from src.core.retriever import load_documents, retrieve_similar
+from src.core.database.connection import load_documents, retrieve_similar
 from src.core.pipeline import embed_model
 
 def run_test():
