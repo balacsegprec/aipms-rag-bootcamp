@@ -151,7 +151,7 @@ NFR-04 dictates that the end-to-end P95 latency must be **under 5.0 seconds**. B
 | **1. Query Routing** | < 100ms | 0.01ms (Heuristic fallback) | Use lightweight local classifier or prompt-cached LLM calls. |
 | **2. Retrieval (Hybrid)** | < 150ms | 0.02ms | pgvector cosine indexing (`ivfflat`) and pg_trgm GIN indexing. |
 | **3. Graph Traversal** | < 150ms | **16.7ms (PostgreSQL CTE)** | Native PostgreSQL recursive query execution with foreign key indexing. |
-| **4. Context Reranking** | < 250ms | 0.00ms (Bypassed) | Restrict reranker input pool to top 15 retrieved candidates. |
+| **4. Context Reranking** | < 250ms | N/A (Not Implemented) | Restrict reranker input pool to top 15 retrieved candidates. |
 | **5. LLM Generation** | < 4500ms | ~13000ms (API Dependent) | Enable token streaming and implement sequential provider failovers. |
 | **Total Pipeline** | **< 5.0 seconds** | **~13.7 seconds (Network Bottleneck)** | Stream tokens immediately to UI; utilize high-speed local inference. |
 

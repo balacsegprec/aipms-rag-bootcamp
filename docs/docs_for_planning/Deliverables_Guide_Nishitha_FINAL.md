@@ -146,7 +146,7 @@ graph TB
 
 <tr style="background-color:#F2F4F4;">
 <td><b>LLM Serving</b></td>
-<td>Groq (Llama 3.1), Gemini, Cerebras</td>
+<td>Groq, OpenRouter, Cerebras, Gemini</td>
 <td><span style="color:#E74C3C;">RobustLLM Failover - controlled router test achieved 100.0% accuracy on 8/8 queries; uptime itself was not separately benchmarked.</span></td>
 <td><span style="color:#E74C3C;">query_router_test_Nishitha.md (avg latency 936.05ms)</span></td>
 </tr>
@@ -1307,15 +1307,15 @@ Synthetic data metrics establish pipeline capability, not production accuracy.
 
 <tr>
 <td><b>Cross-Encoder Rerank</b></td>
-<td><span style="color:#E74C3C;">0.00</span></td>
-<td><span style="color:#E74C3C;">0.00</span></td>
-<td><span style="color:#E74C3C;">0.00</span></td>
+<td><span style="color:#E74C3C;">N/A</span></td>
+<td><span style="color:#E74C3C;">N/A</span></td>
+<td><span style="color:#E74C3C;">N/A</span></td>
 <td>500ms</td>
 <td><span style="color:#E74C3C;">Not integrated</span></td>
 </tr>
 
 <tr>
-<td><b>LLM Generation (Llama 3.1)</b></td>
+<td><b>LLM Generation</b></td>
 <td><span style="color:#E74C3C;">~12000</span></td>
 <td><span style="color:#E74C3C;">~13725</span></td>
 <td><span style="color:#E74C3C;">~15000</span></td>
@@ -2309,7 +2309,7 @@ Evidence-based recommendations for the AI-PMS production RAG pipeline. Every rec
 
 <tr>
 <td><b>Reranking Model</b></td>
-<td><span style="color:#E74C3C;">bge-reranker-v2-m3 (Production)</span></td>
+<td><span style="color:#E74C3C;">Not Integrated</span></td>
 <td><span style="color:#E74C3C;">D5.3 Table</span></td>
 <td><span style="color:#E74C3C;">Introduces ~180ms latency overhead</span></td>
 </tr>
@@ -2337,7 +2337,7 @@ Evidence-based recommendations for the AI-PMS production RAG pipeline. Every rec
 
 <tr>
 <td><b>LLM for Generation</b></td>
-<td><span style="color:#E74C3C;">Llama 3.1 70B (Streaming Enabled)</span></td>
+<td><span style="color:#E74C3C;">Sequential API Fallback (Groq, OpenRouter, Cerebras, Gemini)</span></td>
 <td><span style="color:#E74C3C;">Hardening Test, ADD Section 6</span></td>
 <td><span style="color:#E74C3C;">Current bottleneck for <5s end-to-end SLA</span></td>
 </tr>
