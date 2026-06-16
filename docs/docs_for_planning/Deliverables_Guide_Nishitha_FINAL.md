@@ -93,14 +93,12 @@ graph TB
         FileScanner --> OfflineChunks[Local raw document Chunks]
     end
 
-    subgraph Evaluator & Reformulation Loop [src/agents/langgraph_agent.py]
-        SiblingNodes --> Reranker[ms-marco / bge CPU Reranker]
-        OfflineChunks --> Reranker
-        Reranker -->|Merged Top-K| ContextEval{Context Sufficiency Evaluator}
+    subgraph Evaluator & Retrieval Loop [src/agents/langgraph_agent.py]
+        SiblingNodes --> ContextEval{Context Sufficiency Evaluator}
+        OfflineChunks --> ContextEval
         
         ContextEval -->|Sufficient - Iteration <= 3| AnsGen[Answer Generator node]
-        ContextEval -->|Insufficient Context| Reformulator[Query Reformulator node]
-        Reformulator -->|Loop Back & Reformulate| AgentAgent
+        ContextEval -->|Insufficient Context| AgentAgent
     end
 
     subgraph Output & Compliance Audit Layer
@@ -871,8 +869,8 @@ graph TD
     Router -->|OOS| Fallback[Fallback Response]
     ContractSearch --> ContextEval{Context Sufficient?}
     SiteSearch --> ContextEval
-    ContextEval -->|No| Reformulator[Query Reformulator]
-    Reformulator --> QueryAnalyzer
+    ContextEval -->|No| Retry_Retrieval[Retry Retrieval]
+    Retry_Retrieval --> ContextEval
     ContextEval -->|Yes| AnswerGen[Answer Generator]
     AnswerGen --> End((End))
 ```
@@ -895,8 +893,8 @@ stateDiagram-v2
 
     Contract_Retrieval --> Evaluate_Context
     Evaluate_Context --> Generate_Answer: Sufficient Context
-    Evaluate_Context --> Reformulate_Query: Insufficient Context
-    Reformulate_Query --> Contract_Retrieval
+    Evaluate_Context --> Retry_Retrieval: Insufficient Context
+    Retry_Retrieval --> Contract_Retrieval
 ```
 
 ---

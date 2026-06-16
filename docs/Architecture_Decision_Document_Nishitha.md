@@ -54,7 +54,7 @@ graph TB
         ClientAPI[Client API Call / TestClient] -->|POST /query payload| API_Service[FastAPI src/api/main.py]
     end
 
-    subgraph Security & Hardening Layer [hardening_Nishitha.py]
+    subgraph Security & Hardening Layer [src/core/security/protection.py]
         API_Service -->|Query Text| OutOfScopeFilter{Adversarial & OOD Filter}
         OutOfScopeFilter -->|Match OOD Heuristics / Off-scope| Block[Fast Intercept: Refusal Answer]
         OutOfScopeFilter -->|Safe In-Scope Query| RouterCall[Route Intent Classifier]
@@ -62,7 +62,7 @@ graph TB
 
     subgraph Orchestration & StateGraph Layer [src/agents/langgraph_agent.py]
         RouterCall -->|Initialize StateGraph| AgentAgent{LangGraph StateGraph}
-        AgentAgent -->|Node 1: query_analyzer| Router[LLM Query Router query_router_Nishitha.py]
+        AgentAgent -->|Node 1: query_analyzer| Router[LLM Query Router src/agents/query_router.py]
         Router -->|Sequential API Failover Classifier| RouteSelection{Route Intent}
     end
 
@@ -89,14 +89,12 @@ graph TB
         FileScanner --> OfflineChunks[Local raw document Chunks]
     end
 
-    subgraph Evaluator & Reformulation Loop [src/agents/langgraph_agent.py]
-        SiblingNodes --> Reranker[ms-marco / bge CPU Reranker]
-        OfflineChunks --> Reranker
-        Reranker -->|Merged Top-K| ContextEval{Context Sufficiency Evaluator}
+    subgraph Evaluator & Retrieval Loop [src/agents/langgraph_agent.py]
+        SiblingNodes --> ContextEval{Context Sufficiency Evaluator}
+        OfflineChunks --> ContextEval
         
         ContextEval -->|Sufficient - Iteration <= 3| AnsGen[Answer Generator node]
-        ContextEval -->|Insufficient Context| Reformulator[Query Reformulator node]
-        Reformulator -->|Loop Back & Reformulate| AgentAgent
+        ContextEval -->|Insufficient Context| AgentAgent
     end
 
     subgraph Output & Compliance Audit Layer
@@ -113,7 +111,7 @@ graph TB
     
     class ClientAPI,API_Service api;
     class OutOfScopeFilter,Block,RLS_Enforce security;
-    class AgentAgent,Router,RouteSelection,ContextEval,AnsGen,Reformulator agent;
+    class AgentAgent,Router,RouteSelection,ContextEval,AnsGen agent;
     class pgvector,RRF_Contract,RRF_NCR,RRF_DPR,RRF_Corr db;
     class GraphTraverse,FileScanner fallback;
 ```
