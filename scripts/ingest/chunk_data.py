@@ -4,8 +4,10 @@ This is a small runnable helper to validate `src.chunkers.ncr_dpr_chunker` witho
 modifying the stable ingestion pipeline. It writes named JSON files for reviewer proof-of-work.
 """
 import os
+import sys
 import json
 import time
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
 from src.chunkers import ncr_dpr_chunker as chunker
 
 OUT_DIR = 'experiments/results/ingest_sample'
