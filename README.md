@@ -30,7 +30,7 @@
 
 <br/>
 
-[Overview](#-overview) · [Tech Stack](#-why-this-tech-stack) · [Bootcamp Journey](#-bootcamp-milestones-days-1--10) · [Quick Start](#-quick-start-5-minutes) · [Architecture](#-system-architecture) · [Security](#-security--compliance) · [Deployment](#-deployment)
+[Overview](#-overview) · [Tech Stack](#-why-this-tech-stack) · [Bootcamp Journey](#-bootcamp-milestones-days-1--10) · [Quick Start](#-quick-start-5-minutes) · [Architecture](#-system-architecture) · [Security](#-security--compliance)
 
 ---
 
@@ -90,8 +90,7 @@ Week 2: Custom Chunking → Query Router → Agent Loop → Production Hardening
 | **Embedding Search** | pgvector cosine similarity | Dense semantic retrieval |
 | **BM25 Full-Text** | PostgreSQL `pg_trgm` GIN index | Sparse keyword matching |
 | **Reciprocal Rank Fusion** | Custom RRF algorithm | Hybrid fusion of dense + sparse |
-| **Cross-Encoder Reranking** | HuggingFace sentence-transformers | Rerank top-k results by relevance |
-| **Query Expansion** | Multi-Query, HyDE | Reformulate user queries for better coverage |
+| **Query Expansion** | Multi-Query, HyDE | Reformulated queries for coverage (Experiments) |
 
 ### Infrastructure
 
@@ -114,7 +113,6 @@ Week 2: Custom Chunking → Query Router → Agent Loop → Production Hardening
 ### 🎯 Smart Retrieval
 - 🔍 Hybrid search (embedding + BM25)
 - 🔄 Reciprocal Rank Fusion fusion
-- 🎯 Cross-Encoder reranking
 - 🚀 Sub-2-second response time
 - 📈 95%+ precision on benchmarks
 
@@ -135,10 +133,9 @@ Week 2: Custom Chunking → Query Router → Agent Loop → Production Hardening
 
 ### 🧠 Intelligent Agent
 - 🔁 LangGraph iterative loops
-- 🤖 Self-correcting retrieval
+- 🤖 Self-correcting retrieval (fallback domain check)
 - 🎛️ Multi-provider LLM failovers
 - 📊 Query intent classification
-- 💭 Contextual query reformulation
 
 </td>
 <td width="50%" valign="top">
@@ -231,20 +228,25 @@ aipms-rag-bootcamp/
 │   ├── correspondence/                # Synthetic transmittal letters
 │   └── dmrc/                          # DMRC synthetic JSON records
 │
-├── experiments/
-│   └── results/
-│       ├── correspondence_chunk_test_Nishitha.md
-│       ├── query_router_test_Nishitha.md
-│       ├── graph_rag_test_Nishitha.md
+├── experiments/                       # Experiment scripts and artifacts
+│   └── results/                       # Golden dataset & run logs
 │       ├── agent_test_Nishitha.md
+│       ├── api_test_Nishitha.md       # FastAPI live query logs
+│       ├── correspondence_chunk_test_Nishitha.md
+│       ├── graph_rag_test_Nishitha.md
 │       ├── hardening_test_Nishitha.md
-│       └── api_test_Nishitha.md       # FastAPI live query logs
+│       └── query_router_test_Nishitha.md
 │
 ├── docs/
+│   ├── BALU_tasks/                    # Mentor & Architecture design logs
+│   ├── fixes_for_evaluation/          # Bug fixing logs for eval suites
+│   ├── guides/                        # Local setup guides
+│   ├── API.md                         # FastAPI endpoint specifications
 │   ├── Architecture_Decision_Document_Nishitha.md
-│   ├── Two_Weeks_Plan_Status_Nishitha.md
 │   ├── Day_to_Day_Progress_Nishitha.md
-│   └── SECURITY.md
+│   ├── Nishitha_Contribution_Guide.md # Contribution and engineering credits
+│   ├── SECURITY.md                    # Auditing and RLS security docs
+│   └── Two_Weeks_Plan_Status_Nishitha.md
 │
 ├── tests/                             # Unit + integration test suite
 │   ├── unit/
@@ -256,6 +258,8 @@ aipms-rag-bootcamp/
 │
 ├── _archive_cleanup/                  # Archived configuration and old bootcamp files
 │
+├── CONTRIBUTING.md                    # Contribution rules and ownership
+├── Dockerfile                         # Container build instructions
 ├── docker-compose.yml                 # PostgreSQL + pgvector setup
 ├── requirements.txt
 ├── .env.example
@@ -361,8 +365,8 @@ pytest tests/integration/test_api.py -v
                  ▼
 ┌──────────────────────────────────────────┐
 │    Query Router (LLM Intent Classifier)  │
-│  ├─ Route to: Retrieval / Search / Chat  │
-│  └─ Failover: Claude → GPT → Llama       │
+│  ├─ Route to: Domain Specific Retrieval  │
+│  └─ Failover: Groq → OpenRouter → Gemini │
 └────────────────┬─────────────────────────┘
                  │
                  ▼
@@ -371,20 +375,14 @@ pytest tests/integration/test_api.py -v
 │  ┌─────────────────────────────────────────────────────┐    │
 │  │ Loop 1: Initial Retrieval                           │    │
 │  │  ├─ Embed user query                               │    │
-│  │  ├─ Hybrid search: pgvector + pg_trgm + RRF        │    │
-│  │  └─ Cross-Encoder rerank top-10                    │    │
+│  │  ├─ pgvector cosine similarity search              │    │
+│  │  └─ Domain + Tenant isolation filters              │    │
 │  └─────────────────────────────────────────────────────┘    │
 │  ┌─────────────────────────────────────────────────────┐    │
 │  │ Loop 2: LLM Generation + Self-Critique             │    │
 │  │  ├─ Build prompt with retrieved context            │    │
-│  │  ├─ Stream LLM response                            │    │
-│  │  └─ Evaluate: "Is answer complete?"                │    │
-│  └─────────────────────────────────────────────────────┘    │
-│  ┌─────────────────────────────────────────────────────┐    │
-│  │ Loop 3: Query Reformulation (if needed)            │    │
-│  │  ├─ Multi-Query: Generate variations               │    │
-│  │  ├─ HyDE: Hypothetical document generation         │    │
-│  │  └─ Re-retrieve with new queries                   │    │
+│  │  ├─ Evaluate: "sufficient or insufficient"         │    │
+│  │  └─ Retry retrieval if insufficient (max 3 loops)  │    │
 │  └─────────────────────────────────────────────────────┘    │
 └────────────┬──────────────────────────────────────────────────┘
              │
@@ -436,11 +434,11 @@ cursor.execute("""
 Dual-layer out-of-scope blocker with 10/10 success rate:
 
 ```python
-# Layer 1: Regex heuristics (fast)
-# Blocks: capital cities, cooking recipes, medical advice, etc.
+# Layer 1: Prompt Injection Regex (fast)
+# Blocks malicious system instructions and bypass attempts.
 
-# Layer 2: LLM classification (accurate)
-# "Is this question about our construction documents?"
+# Layer 2: Semantic Centroid Similarity
+# Computes cosine similarity against expected construction domain queries.
 ```
 
 **Blocked Adversarial Examples:**
@@ -456,7 +454,7 @@ Dual-layer out-of-scope blocker with 10/10 success rate:
 Every query logged to CDM audit table:
 
 ```
-timestamp | tenant_id | user_id | query_hash | result | latency | cost
+timestamp | tenant_id | query_hash | retrieved_chunk_ids | response_hash | latency_ms
 ```
 
 <br/>
@@ -505,103 +503,34 @@ http://localhost:8000/docs
 
 ### Key Endpoints
 
-**POST `/api/query`** — Main RAG query endpoint
+**POST `/query`** — Main RAG query endpoint
 
 ```bash
-curl -X POST http://localhost:8000/api/query \
-  -H "Authorization: Bearer YOUR_TOKEN" \
+curl -X POST http://localhost:8000/query \
+  -H "X-API-Key: super_secret_key_123" \
   -H "Content-Type: application/json" \
   -d '{
-    "question": "What are the payment terms?",
-    "tenant_id": "acme-corp",
-    "use_agent": true,
-    "use_hardening": true
+    "query": "What are the payment terms?",
+    "tenant_id": "metro_tenant"
   }'
 ```
 
 **Response:**
 ```json
 {
+  "query": "What are the payment terms?",
+  "tenant_id": "metro_tenant",
   "answer": "Payment terms are net 30 days...",
-  "sources": [
-    {
-      "document": "contract_001.pdf",
-      "page": 3,
-      "excerpt": "Payment due within 30 days..."
-    }
-  ],
-  "latency_ms": 1245,
-  "model_used": "gpt-4-turbo"
+  "citations": "1. contract_001.pdf (Page 3)",
+  "confidence": "high",
+  "retrieval_trace": [],
+  "latency_ms": 1245.5,
+  "latency_status": "PASSED",
+  "latency_budget_ms": 5000
 }
 ```
 
-**POST `/api/documents/upload`** — Upload documents
-
-```bash
-curl -X POST http://localhost:8000/api/documents/upload \
-  -H "Authorization: Bearer YOUR_TOKEN" \
-  -F "file=@contract.pdf" \
-  -F "tenant_id=acme-corp"
-```
-
-Full endpoint reference: [`docs/API.md`](docs/API.md) (auto-generated from FastAPI)
-
-<br/>
-
-## 🌍 Deployment
-
-### Docker Compose (Development)
-
-```bash
-docker-compose up -d
-# → PostgreSQL at localhost:5432
-# → API at localhost:8000
-```
-
-### Production Deployment (Docker)
-
-```bash
-# Build image
-docker build -t aipms-rag:latest .
-
-# Push to registry
-docker push your-registry/aipms-rag:latest
-
-# Deploy with environment variables
-docker run -d \
-  -e POSTGRES_URL=postgresql://prod-db:5432/aipms \
-  -e OPENAI_API_KEY=sk-... \
-  -e JWT_SECRET=your-secret \
-  -p 8000:8000 \
-  your-registry/aipms-rag:latest
-```
-
-### Cloud Deployment (Railway / Render / Fly.io)
-
-```bash
-# Set environment variables in dashboard
-# - POSTGRES_URL
-# - OPENAI_API_KEY
-# - JWT_SECRET
-
-# Push to Git → Auto-deploys
-git push origin main
-```
-
-### Self-Hosted on VPS
-
-```bash
-# SSH into Ubuntu server
-ssh ubuntu@your-vps.com
-
-# Clone & setup
-git clone https://github.com/balacsegprec/aipms-rag-bootcamp.git
-cd aipms-rag-bootcamp
-
-# Use systemd + PM2 for process management
-pm2 start "uvicorn src.api.main:app --host 0.0.0.0 --port 8000"
-pm2 save
-```
+Full endpoint reference: [`docs/API.md`](docs/API.md)
 
 <br/>
 
