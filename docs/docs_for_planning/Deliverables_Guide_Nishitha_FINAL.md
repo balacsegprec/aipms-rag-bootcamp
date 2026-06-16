@@ -146,7 +146,7 @@ graph TB
 
 <tr style="background-color:#F2F4F4;">
 <td><b>LLM Serving</b></td>
-<td>Groq (Llama 3.1), Gemini, Cerebras</td>
+<td>Groq, OpenRouter, Cerebras, Gemini</td>
 <td><span style="color:#E74C3C;">RobustLLM Failover - controlled router test achieved 100.0% accuracy on 8/8 queries; uptime itself was not separately benchmarked.</span></td>
 <td><span style="color:#E74C3C;">query_router_test_Nishitha.md (avg latency 936.05ms)</span></td>
 </tr>
@@ -191,20 +191,20 @@ Side-by-side UMAP projections showing how each embedding model separates AI-PMS 
 
 *Run `_archive_cleanup/notebooks/01_embedding_comparision_Nishitha.ipynb` or execute `python scripts/dev/embedding_benchmark.py` to generate the updated UMAP comparison plots.*
 <p align="center">
-  <img src="docs/images/umap_all-MiniLM-L6-v2.png" alt="UMAP Comparison" width="100%">
+  <img src="../images/umap_all-MiniLM-L6-v2.png" alt="UMAP Comparison" width="100%">
   <br>
   <i>Figure D2.1: UMAP Projections: MiniLM.</i>
 </p><p align="center">
-  <img src="docs/images/umap_BAAI_bge-large-en-v1.5.png" alt="UMAP Comparison" width="100%">
+  <img src="../images/umap_BAAI_bge-large-en-v1.5.png" alt="UMAP Comparison" width="100%">
   <br>
   <i>Figure D2.2: UMAP Projections: bge-large.</i>
 </p><p align="center">
-  <img src="docs/images/umap_nomic-ai_nomic-embed-text-v1.5.png" alt="UMAP Comparison" width="100%">
+  <img src="../images/umap_nomic-ai_nomic-embed-text-v1.5.png" alt="UMAP Comparison" width="100%">
   <br>
   <i>Figure D2.3: UMAP Projections: nomic-embed.</i>
 </p>
 <p align="center">
-  <img src="docs/images/umap_comparison.png" alt="UMAP Comparison" width="100%" height="100%">
+  <img src="../images/umap_comparison.png" alt="UMAP Comparison" width="100%" height="100%">
   <br>
   <i>Figure D2.4: UMAP Projections comparing MiniLM, bge-large, and nomic-embed.</i>
 </p>
@@ -346,7 +346,7 @@ Side-by-side UMAP projections showing how each embedding model separates AI-PMS 
 # <span style="color:#1F4E79;">D3. Chunking Strategy Comparison</span>
 
 <p align="center">
-    <img src="docs/images/chunking_impact.png" alt="Chunking Impact by Document Type" width="100%">
+    <img src="../images/chunking_impact.png" alt="Chunking Impact by Document Type" width="100%">
   <br>
   <i>Figure D3.1: Chunking Impact by Document Type — Based on chunking_results.md</i>
 </p>
@@ -710,7 +710,7 @@ graph LR
 # <span style="color:#2E75B6;">D5.2 Consolidated Metrics</span>
 
 <p align="center">
-    <img src="docs/images/retrieval_comparison.png" alt="Strategy Performance Comparison" width="100%">
+    <img src="../images/retrieval_comparison.png" alt="Strategy Performance Comparison" width="100%">
   <br>
   <i>Figure D5.2: Strategy Performance Comparison</i>
 </p>
@@ -1250,7 +1250,7 @@ Synthetic data metrics establish pipeline capability, not production accuracy.
 # <span style="color:#1F4E79;">D8. Latency Analysis & NFR-04 Compliance</span>
 
 <p align="center">
-    <img src="docs/images/latency_breakdown.png" alt="Latency Budget Breakdown" width="100%">
+    <img src="../images/latency_breakdown.png" alt="Latency Budget Breakdown" width="100%">
   <br>
   <i>Figure D8.1: Latency Budget Breakdown — Based on Realized WSL2 Latency</i>
 </p>
@@ -1307,15 +1307,15 @@ Synthetic data metrics establish pipeline capability, not production accuracy.
 
 <tr>
 <td><b>Cross-Encoder Rerank</b></td>
-<td><span style="color:#E74C3C;">0.00</span></td>
-<td><span style="color:#E74C3C;">0.00</span></td>
-<td><span style="color:#E74C3C;">0.00</span></td>
+<td><span style="color:#E74C3C;">N/A</span></td>
+<td><span style="color:#E74C3C;">N/A</span></td>
+<td><span style="color:#E74C3C;">N/A</span></td>
 <td>500ms</td>
 <td><span style="color:#E74C3C;">Not integrated</span></td>
 </tr>
 
 <tr>
-<td><b>LLM Generation (Llama 3.1)</b></td>
+<td><b>LLM Generation</b></td>
 <td><span style="color:#E74C3C;">~12000</span></td>
 <td><span style="color:#E74C3C;">~13725</span></td>
 <td><span style="color:#E74C3C;">~15000</span></td>
@@ -2309,7 +2309,7 @@ Evidence-based recommendations for the AI-PMS production RAG pipeline. Every rec
 
 <tr>
 <td><b>Reranking Model</b></td>
-<td><span style="color:#E74C3C;">bge-reranker-v2-m3 (Production)</span></td>
+<td><span style="color:#E74C3C;">Not Integrated</span></td>
 <td><span style="color:#E74C3C;">D5.3 Table</span></td>
 <td><span style="color:#E74C3C;">Introduces ~180ms latency overhead</span></td>
 </tr>
@@ -2337,7 +2337,7 @@ Evidence-based recommendations for the AI-PMS production RAG pipeline. Every rec
 
 <tr>
 <td><b>LLM for Generation</b></td>
-<td><span style="color:#E74C3C;">Llama 3.1 70B (Streaming Enabled)</span></td>
+<td><span style="color:#E74C3C;">Sequential API Fallback (Groq, OpenRouter, Cerebras, Gemini)</span></td>
 <td><span style="color:#E74C3C;">Hardening Test, ADD Section 6</span></td>
 <td><span style="color:#E74C3C;">Current bottleneck for <5s end-to-end SLA</span></td>
 </tr>
