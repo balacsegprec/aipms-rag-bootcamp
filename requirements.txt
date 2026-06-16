@@ -16,3 +16,8 @@ langchain-huggingface
 transformers
 pydantic_settings
 openpyxl
+pytest
+fastapi
+uvicorn
+httpx
+langgraph

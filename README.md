@@ -186,30 +186,49 @@ This README documents a **complete bootcamp journey** from naive RAG to producti
 aipms-rag-bootcamp/
 │
 ├── src/
-│   └── core/
-│       ├── langgraph_agent.py          # LangGraph StateGraph with 3-loop self-correction
-│       ├── security/ modules (pii, database, audit, protection)      # RLS, SHA-256 dedup, audit logging, adversarial blocker
-│       ├── query_router.py   # LLM intent classifier + provider failovers
-│       ├── graph_rag.py               # PostgreSQL self-join hierarchical Graph retrieval
-│       ├── pipeline.py                # Baseline modular RAG (embedding → retrieval → generation)
-│       ├── retriever.py               # Hybrid search: pgvector + pg_trgm + RRF
-│       └── llm.py                     # Multi-provider LLM chain with fallbacks
-│
-├── src/api/main.py                # FastAPI web service with TestClient
+│   ├── agents/
+│   │   ├── langgraph_agent.py         # LangGraph StateGraph with 3-loop self-correction
+│   │   └── query_router.py            # LLM intent classifier + provider failovers
+│   ├── api/
+│   │   └── main.py                    # FastAPI web service with TestClient
+│   ├── chunkers/
+│   │   └── ncr_dpr_chunker.py         # NCR and DPR specific chunking logic
+│   ├── core/
+│   │   ├── database/                  # Database connections and utilities
+│   │   ├── security/                  # RLS, SHA-256 dedup, audit logging, adversarial blocker
+│   │   ├── entity_mapper.py           # Entity mapping utilities
+│   │   ├── graph_rag.py               # PostgreSQL self-join hierarchical Graph retrieval
+│   │   ├── pipeline.py                # Baseline modular RAG pipeline
+│   │   ├── retriever.py               # Hybrid search: pgvector + pg_trgm + RRF
+│   │   └── llm.py                     # Multi-provider LLM chain with fallbacks
+│   ├── evals/
+│   │   └── metrics.py                 # Evaluation metrics implementation
+│   └── utils/
+│       └── config.py                  # Configuration utilities
 │
 ├── scripts/
 │   ├── dev/
-│   │   ├── demo_graph_rag.py         # Day 7: GraphRAG prototype
-│   │   └── embedding_benchmark.py
+│   │   ├── demo_graph_rag.py          # GraphRAG prototype
+│   │   └── embedding_benchmark.py     # Embedding evaluation
+│   ├── evaluation/
+│   │   └── benchmark.py               # Precision@5, NDCG scoring
+│   ├── experiments/                   # Custom experiment scripts
 │   ├── ingest/
-│   │   ├── from_xlsx.py              # Day 7: Systems Taxonomy ingestion
-│   │   ├── chunk_data.py             # Day 6: Data chunking
+│   │   ├── chunk_data.py              # Data chunking script
+│   │   ├── from_xlsx.py               # Systems Taxonomy ingestion
 │   │   └── generate_correspondence.py # Mock transmittal generator
-│   └── evaluation/
-│       └── benchmark.py              # Precision@5, NDCG scoring
+│   ├── migration/                     # Database migration scripts
+│   ├── eval_baseline.py               # Baseline evaluation script
+│   ├── eval_retrievals.py             # Retrieval evaluation script
+│   ├── hyde_experiment.py             # HyDE experiment runner
+│   ├── reinit_db.py                   # Database initialization script
+│   ├── setup_mlflow.py                # MLflow setup
+│   ├── test_contract_confusion.py     # Experiment: contract confusion
+│   ├── test_leakage.py                # Experiment: tenant data leakage
+│   └── test_summary_bias.py           # Experiment: summary bias
 │
 ├── data/
-│   ├── correspondence/                # Synthetic transmittal letters (let_001–let_005)
+│   ├── correspondence/                # Synthetic transmittal letters
 │   └── dmrc/                          # DMRC synthetic JSON records
 │
 ├── experiments/
@@ -234,6 +253,8 @@ aipms-rag-bootcamp/
 │   └── integration/
 │       ├── test_agent.py
 │       └── test_api.py
+│
+├── _archive_cleanup/                  # Archived configuration and old bootcamp files
 │
 ├── docker-compose.yml                 # PostgreSQL + pgvector setup
 ├── requirements.txt
@@ -637,7 +658,7 @@ git push origin feature/your-feature
       <td align="center" valign="top" width="33.33%">
         <a href="https://github.com/donthi-nishitha-4">
           <img src="https://github.com/donthi-nishitha-4.png" width="80px;" style="border-radius:50%"/>
-          <br/><sub><b>Nishitha</b></sub>
+          <br/><sub><b>Donthi Nishitha</b></sub>
         </a>
         <br/>💻 🚀 ⚡
         <br/><small>Advanced RAG Track<br/>WSL/Ubuntu Development</small>

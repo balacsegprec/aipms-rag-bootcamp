@@ -3,8 +3,8 @@
 **Role:** Advanced RAG Ingestion Engineering  
 **Date:** May 20, 2026  
 **Syllabus Target:** Day 7 — GraphRAG Prototype & Matrix Ingestion  
-**Average Graph Traversal Latency:** `16.72ms`  
-**Average Semantic Node Lookup Latency:** `10470.47ms`  
+**Average Graph Traversal Latency:** `14.60ms`  
+**Average Semantic Node Lookup Latency:** `8025.42ms`  
 
 ---
 
@@ -13,7 +13,7 @@ These queries require relational traversals (interface dependencies, parent-chil
 
 ### G1: Which systems physically interface with Rolling Stock systems?
 **Evaluation Verdict**: `❌ Naive FAILED (No relational data) | GraphRAG PASSED ✅`  
-**Traversal Latency**: `10.0ms`  
+**Traversal Latency**: `21.0ms`  
 
 #### 🔌 GraphRAG Ingested Context:
 ```text
@@ -48,7 +48,7 @@ These systems physically interface with Rolling Stock (RST) systems, enabling th
 
 ### G2: Analyze the safety-critical interface impact if Rolling Stock (RST) fails.
 **Evaluation Verdict**: `❌ Naive FAILED (No relational data) | GraphRAG PASSED ✅`  
-**Traversal Latency**: `10.5ms`  
+**Traversal Latency**: `8.7ms`  
 
 #### 🔌 GraphRAG Ingested Context:
 ```text
@@ -115,7 +115,7 @@ The failure of the Rolling Stock (RST) can have significant safety-critical inte
 
 ### G3: Trace the full systems taxonomy path for Platform edge coping (CVL-ES-PL-01).
 **Evaluation Verdict**: `❌ Naive FAILED (No relational data) | GraphRAG PASSED ✅`  
-**Traversal Latency**: `11.7ms`  
+**Traversal Latency**: `24.3ms`  
 
 #### 🔌 GraphRAG Ingested Context:
 ```text
@@ -129,10 +129,10 @@ Civil & Structural Engineering (CVL) -> Elevated Stations (CVL-ES) -> Platform L
 #### 🏆 GraphRAG LLM Answer:
 > Based on the provided taxonomy graph context, the full systems taxonomy path for Platform edge coping (CVL-ES-PL-01) is:
 
-1. **Civil & Structural Engineering (CVL)**: This is the top-level category that encompasses all aspects of civil and structural engineering in the metro rail system.
-2. **Elevated Stations (CVL-ES)**: This category is a sub-level of Civil & Structural Engineering, focusing on elevated stations, which are a type of station design in the metro rail system.
-3. **Platform Level (CVL-ES-PL)**: This category is a sub-level of Elevated Stations, specifically focusing on the platform level, which is the area where passengers board and alight from trains.
-4. **Platform edge coping (CVL-ES-PL-01)**: This is the most specific category, focusing on the platform edge coping, which is a component of the platform level that provides a safe and accessible edge for passengers.
+1. **Civil & Structural Engineering (CVL)**: This is the top-level category for the systems taxonomy.
+2. **Elevated Stations (CVL-ES)**: This category is a sub-level of Civil & Structural Engineering, focusing on elevated stations.
+3. **Platform Level (CVL-ES-PL)**: This category is a sub-level of Elevated Stations, specifically addressing platform-level aspects.
+4. **Platform edge coping (CVL-ES-PL-01)**: This is the most specific category, representing the platform edge coping system.
 
 The full systems taxonomy path for Platform edge coping (CVL-ES-PL-01) is therefore: **CVL -> CVL-ES -> CVL-ES-PL -> CVL-ES-PL-01**.
 
@@ -140,7 +140,7 @@ The full systems taxonomy path for Platform edge coping (CVL-ES-PL-01) is theref
 
 ### G4: List all physical interfaces for the Track (P-Way) system (TRK).
 **Evaluation Verdict**: `❌ Naive FAILED (No relational data) | GraphRAG PASSED ✅`  
-**Traversal Latency**: `13.2ms`  
+**Traversal Latency**: `14.3ms`  
 
 #### 🔌 GraphRAG Ingested Context:
 ```text
@@ -165,19 +165,19 @@ Node 'TRK' has the following direct connections in the knowledge graph:
 
 **Outgoing Physical Interfaces:**
 
-1. **Civil & Structural Engineering (CVL)**: This interface involves the exchange of information related to the design, construction, and maintenance of the track infrastructure.
-2. **Rolling Stock (RST)**: This interface involves the exchange of information related to the interaction between the track and the rolling stock, including train movement and safety.
-3. **Traction Power Supply (TPS)**: This interface involves the exchange of information related to the power supply to the track, including electrification and signaling systems.
-4. **Depot & Workshop (DEP)**: This interface involves the exchange of information related to the maintenance and repair of the track and rolling stock.
-5. **Environment, Health & Safety (ENV)**: This interface involves the exchange of information related to the environmental and safety aspects of the track system.
+1. **Civil & Structural Engineering (CVL)**: This interface involves the exchange of information related to the physical aspects of the track system, such as design, construction, and maintenance.
+2. **Rolling Stock (RST)**: This interface involves the exchange of information related to the interaction between the track system and rolling stock, including train movement, speed, and safety.
+3. **Traction Power Supply (TPS)**: This interface involves the exchange of information related to the power supply to the track system, including voltage, current, and power quality.
+4. **Depot & Workshop (DEP)**: This interface involves the exchange of information related to the maintenance and repair of the track system, including scheduling, inventory, and quality control.
+5. **Environment, Health & Safety (ENV)**: This interface involves the exchange of information related to the environmental and safety aspects of the track system, including noise, vibration, and risk management.
 
 **Incoming Physical Interfaces:**
 
-1. **Civil & Structural Engineering (CVL)**: This interface involves the exchange of information related to the design, construction, and maintenance of the track infrastructure.
-2. **Rolling Stock (RST)**: This interface involves the exchange of information related to the interaction between the track and the rolling stock, including train movement and safety.
-3. **Traction Power Supply (TPS)**: This interface involves the exchange of information related to the power supply to the track, including electrification and signaling systems.
-4. **Depot & Workshop (DEP)**: This interface involves the exchange of information related to the maintenance and repair of the track and rolling stock.
-5. **Environment, Health & Safety (ENV)**: This interface involves the exchange of information related to the environmental and safety aspects of the track system.
+1. **Civil & Structural Engineering (CVL)**: This interface involves the exchange of information related to the physical aspects of the track system, such as design, construction, and maintenance.
+2. **Rolling Stock (RST)**: This interface involves the exchange of information related to the interaction between the track system and rolling stock, including train movement, speed, and safety.
+3. **Traction Power Supply (TPS)**: This interface involves the exchange of information related to the power supply to the track system, including voltage, current, and power quality.
+4. **Depot & Workshop (DEP)**: This interface involves the exchange of information related to the maintenance and repair of the track system, including scheduling, inventory, and quality control.
+5. **Environment, Health & Safety (ENV)**: This interface involves the exchange of information related to the environmental and safety aspects of the track system, including noise, vibration, and risk management.
 
 In summary, the physical interfaces for the Track (P-Way) system (TRK) involve the exchange of information with the following systems:
 
@@ -187,13 +187,13 @@ In summary, the physical interfaces for the Track (P-Way) system (TRK) involve t
 - Depot & Workshop (DEP)
 - Environment, Health & Safety (ENV)
 
-These interfaces are essential for the safe and efficient operation of the track system.
+These interfaces are essential for ensuring the safe and efficient operation of the track system.
 
 ---
 
 ### G5: Find all systems having data or logical interfaces with Signalling & Train Control (SIG).
 **Evaluation Verdict**: `❌ Naive FAILED (No relational data) | GraphRAG PASSED ✅`  
-**Traversal Latency**: `38.2ms`  
+**Traversal Latency**: `13.0ms`  
 
 #### 🔌 GraphRAG Ingested Context:
 ```text
@@ -239,7 +239,7 @@ These systems are connected to SIG through data/logical links, indicating that t
 
 ### G6: Which systems have commercial or contractual relationships with Automatic Fare Collection (AFC)?
 **Evaluation Verdict**: `❌ Naive FAILED (No relational data) | GraphRAG PASSED ✅`  
-**Traversal Latency**: `10.2ms`  
+**Traversal Latency**: `14.4ms`  
 
 #### 🔌 GraphRAG Ingested Context:
 ```text
@@ -264,7 +264,7 @@ Therefore, based on the given information, the system that has a commercial or c
 
 ### G7: What components or subsystems exist hierarchically under Elevated Viaduct Foundations (CVL-EV-FN)?
 **Evaluation Verdict**: `❌ Naive FAILED (No relational data) | GraphRAG PASSED ✅`  
-**Traversal Latency**: `23.6ms`  
+**Traversal Latency**: `10.2ms`  
 
 #### 🔌 GraphRAG Ingested Context:
 ```text
@@ -292,7 +292,7 @@ Please note that the specific components or subsystems may vary depending on the
 
 ### G8: Analyze the safety-critical dependencies connected to Signalling & Train Control (SIG).
 **Evaluation Verdict**: `❌ Naive FAILED (No relational data) | GraphRAG PASSED ✅`  
-**Traversal Latency**: `25.7ms`  
+**Traversal Latency**: `10.5ms`  
 
 #### 🔌 GraphRAG Ingested Context:
 ```text
@@ -321,51 +321,43 @@ System ID: SIG has the following interface dependencies in the taxonomy graph:
 
 Based on the provided taxonomy graph context, we have identified the following safety-critical dependencies connected to Signalling & Train Control (SIG):
 
-1. **Permanent Way (Track) (TRK)**:
-   - SIG points to TRK: This indicates that the Signalling & Train Control system relies on the Permanent Way (Track) for safe operation.
-   - TRK points to SIG: This suggests that the Permanent Way (Track) system also relies on the Signalling & Train Control system for safe operation.
+**Direct Dependencies:**
 
-2. **Rolling Stock (RST)**:
-   - SIG points to RST: This indicates that the Signalling & Train Control system relies on the Rolling Stock for safe operation.
-   - RST points to SIG: This suggests that the Rolling Stock system also relies on the Signalling & Train Control system for safe operation.
+1. **Permanent Way (Track) (TRK)**: SIG points to TRK, indicating that the signalling and train control system relies on the track infrastructure for safe operation.
+2. **Rolling Stock (RST)**: SIG points to RST, indicating that the signalling and train control system interacts with the rolling stock to ensure safe movement.
+3. **Telecommunications (TEL)**: SIG points to TEL, indicating that the signalling and train control system relies on telecommunications for communication and data exchange.
+4. **Platform Screen Doors (PSD)**: SIG points to PSD, indicating that the signalling and train control system interacts with platform screen doors to ensure safe passenger movement.
+5. **SCADA & BMS (SCA)**: SIG points to SCA, indicating that the signalling and train control system relies on SCADA and BMS for monitoring and control.
+6. **Depot & Workshop (DEP)**: SIG points to DEP, indicating that the signalling and train control system interacts with depot and workshop facilities for maintenance and repair.
+7. **Operations & Safety (OPS)**: SIG points to OPS, indicating that the signalling and train control system relies on operations and safety procedures for safe operation.
 
-3. **Telecommunications (TEL)**:
-   - SIG points to TEL: This indicates that the Signalling & Train Control system relies on the Telecommunications system for safe operation.
-   - TEL points to SIG: This suggests that the Telecommunications system also relies on the Signalling & Train Control system for safe operation.
+**Indirect Dependencies:**
 
-4. **Platform Screen Doors (PSD)**:
-   - SIG points to PSD: This indicates that the Signalling & Train Control system relies on the Platform Screen Doors for safe operation.
-   - PSD points to SIG: This suggests that the Platform Screen Doors system also relies on the Signalling & Train Control system for safe operation.
+1. **Permanent Way (Track) (TRK)**: TRK points to SIG, indicating that the track infrastructure is dependent on the signalling and train control system for safe operation.
+2. **Rolling Stock (RST)**: RST points to SIG, indicating that the rolling stock is dependent on the signalling and train control system for safe movement.
+3. **Telecommunications (TEL)**: TEL points to SIG, indicating that telecommunications is dependent on the signalling and train control system for communication and data exchange.
+4. **Platform Screen Doors (PSD)**: PSD points to SIG, indicating that platform screen doors are dependent on the signalling and train control system for safe passenger movement.
+5. **SCADA & BMS (SCA)**: SCA points to SIG, indicating that SCADA and BMS are dependent on the signalling and train control system for monitoring and control.
+6. **Depot & Workshop (DEP)**: DEP points to SIG, indicating that depot and workshop facilities are dependent on the signalling and train control system for maintenance and repair.
+7. **Operations & Safety (OPS)**: OPS points to SIG, indicating that operations and safety procedures are dependent on the signalling and train control system for safe operation.
 
-5. **SCADA & BMS (SCA)**:
-   - SIG points to SCA: This indicates that the Signalling & Train Control system relies on the SCADA & BMS system for safe operation.
-   - SCA points to SIG: This suggests that the SCADA & BMS system also relies on the Signalling & Train Control system for safe operation.
+**Conclusion:**
 
-6. **Depot & Workshop (DEP)**:
-   - SIG points to DEP: This indicates that the Signalling & Train Control system relies on the Depot & Workshop system for safe operation.
-   - DEP points to SIG: This suggests that the Depot & Workshop system also relies on the Signalling & Train Control system for safe operation.
+The Signalling & Train Control (SIG) system has a complex network of safety-critical dependencies with various system components, including Permanent Way (Track) (TRK), Rolling Stock (RST), Telecommunications (TEL), Platform Screen Doors (PSD), SCADA & BMS (SCA), Depot & Workshop (DEP), and Operations & Safety (OPS). These dependencies highlight the importance of ensuring that the SIG system is designed, implemented, and maintained to meet the highest safety standards to prevent accidents and ensure safe operation of the metro rail system.
 
-7. **Operations & Safety (OPS)**:
-   - SIG points to OPS: This indicates that the Signalling & Train Control system relies on the Operations & Safety system for safe operation.
-   - OPS points to SIG: This suggests that the Operations & Safety system also relies on the Signalling & Train Control system for safe operation.
+**Recommendations:**
 
-**Conclusion**
-
-The Signalling & Train Control (SIG) system has significant safety-critical dependencies with various systems in the Metro Rail Systems. These dependencies highlight the importance of ensuring that the SIG system operates safely and reliably, as any failure or malfunction can have severe consequences. As a Metro Rail Systems Auditor, it is essential to conduct thorough risk assessments and implement robust safety measures to mitigate potential risks associated with these dependencies.
-
-**Recommendations**
-
-1. Conduct a detailed risk assessment of the SIG system and its dependencies to identify potential safety risks.
-2. Implement robust safety measures, such as redundant systems and fail-safe designs, to mitigate potential risks.
-3. Develop and maintain comprehensive safety procedures and protocols for the SIG system and its dependencies.
-4. Provide regular training and awareness programs for personnel involved in the operation and maintenance of the SIG system and its dependencies.
-5. Conduct regular audits and inspections to ensure compliance with safety regulations and standards.
+1. Conduct a thorough risk assessment to identify potential safety risks associated with the SIG system and its dependencies.
+2. Develop and implement a comprehensive safety management plan to mitigate identified risks.
+3. Ensure that the SIG system is designed and implemented in accordance with relevant safety standards and regulations.
+4. Provide regular training and awareness programs for personnel involved in the operation and maintenance of the SIG system.
+5. Conduct regular audits and inspections to ensure that the SIG system is functioning as intended and that safety standards are being met.
 
 ---
 
 ### G9: List all interface relations (all types) for Platform Screen Doors (PSD).
 **Evaluation Verdict**: `❌ Naive FAILED (No relational data) | GraphRAG PASSED ✅`  
-**Traversal Latency**: `9.9ms`  
+**Traversal Latency**: `10.3ms`  
 
 #### 🔌 GraphRAG Ingested Context:
 ```text
@@ -428,7 +420,7 @@ System ID: PSD has the following interface dependencies in the taxonomy graph:
 
 ### G10: Trace the hierarchical category tree up to L1 for Tactile paving (CVL-ES-PL-02).
 **Evaluation Verdict**: `❌ Naive FAILED (No relational data) | GraphRAG PASSED ✅`  
-**Traversal Latency**: `14.3ms`  
+**Traversal Latency**: `19.2ms`  
 
 #### 🔌 GraphRAG Ingested Context:
 ```text
@@ -447,7 +439,9 @@ Civil & Structural Engineering (CVL) -> Elevated Stations (CVL-ES) -> Platform L
     - L2: CVL-ES (Elevated Stations)
       - L3: CVL (Civil & Structural Engineering)
 
-Therefore, the hierarchical category tree up to L1 for 'Tactile paving (CVL-ES-PL-02)' is: CVL-ES-PL (Platform Level).
+So, the hierarchical category tree for 'Tactile paving (CVL-ES-PL-02)' is:
+
+CVL-ES-PL-02 (Tactile paving) -> CVL-ES-PL (Platform Level) -> CVL-ES (Elevated Stations) -> CVL (Civil & Structural Engineering)
 
 ---
 
@@ -455,7 +449,7 @@ Therefore, the hierarchical category tree up to L1 for 'Tactile paving (CVL-ES-P
 These queries represent standard factoid/conceptual lookups. GraphRAG handles them by doing semantic vector search on the `taxonomy_nodes` table, retrieving exact node descriptions and equipment metadata.
 
 ### N1: What is tactile paving for PRMs and where is it used?
-**Semantic Lookup Latency**: `11272.9ms`  
+**Semantic Lookup Latency**: `8278.1ms`  
 
 #### 📄 Retrieved Node Metadata:
 ```text
@@ -470,12 +464,12 @@ Relevant Systems Taxonomy Nodes found:
 
 Tactile paving for People with Reduced Mobility (PRMs) is a type of guidance tile used to assist visually impaired individuals. It is described in the node: Tactile paving (PRM) (CVL-ES-PL-02) with a criticality level of Medium.
 
-However, I couldn't find any information on the specific locations where tactile paving is used. The provided nodes do not contain any information on the usage or installation locations of tactile paving.
+However, I couldn't find any information on the specific locations where tactile paving is used.
 
 ---
 
 ### N2: Explain the purpose of anti-slip edge finishing on platform edge coping.
-**Semantic Lookup Latency**: `8893.7ms`  
+**Semantic Lookup Latency**: `8073.2ms`  
 
 #### 📄 Retrieved Node Metadata:
 ```text
@@ -495,7 +489,7 @@ Therefore, the purpose of anti-slip edge finishing on platform edge coping is to
 ---
 
 ### N3: What are diaphragm walls in underground station boxes?
-**Semantic Lookup Latency**: `9448.8ms`  
+**Semantic Lookup Latency**: `8739.4ms`  
 
 #### 📄 Retrieved Node Metadata:
 ```text
@@ -511,7 +505,7 @@ Relevant Systems Taxonomy Nodes found:
 ---
 
 ### N4: Describe bored piles used in elevated viaduct foundations.
-**Semantic Lookup Latency**: `10442.3ms`  
+**Semantic Lookup Latency**: `9013.7ms`  
 
 #### 📄 Retrieved Node Metadata:
 ```text
@@ -524,14 +518,14 @@ Relevant Systems Taxonomy Nodes found:
 #### ✏️ Generated Answer:
 > Based on the provided Systems Taxonomy Nodes, bored piles used in elevated viaduct foundations are described as follows:
 
-Bored piles with diameters ranging from 0.8 to 1.2 meters are used in elevated viaduct foundations. These piles are made of cast-in-situ reinforced cement concrete (RCC) and are critical to the structural integrity of the elevated viaduct.
+Bored piles with diameters ranging from 0.8 to 1.2 meters are used in elevated viaduct foundations. These piles are constructed using cast-in-situ reinforced cement concrete (RCC) material.
 
 Node ID: CVL-EV-FN-01
 
 ---
 
 ### N5: What is the Concourse Level tickting and circulation level in elevated stations?
-**Semantic Lookup Latency**: `8827.7ms`  
+**Semantic Lookup Latency**: `8223.8ms`  
 
 #### 📄 Retrieved Node Metadata:
 ```text
@@ -546,18 +540,16 @@ Relevant Systems Taxonomy Nodes found:
 
 Node ID: CVL-ES-CC (Concourse Level)
 
-Description: None
-
-Key Equipment: Ticketing and circulation level
+Description: None (However, the key equipment is mentioned as Ticketing and circulation level)
 
 Criticality: High
 
-Since the Concourse Level (CVL-ES-CC) is a key equipment for ticketing and circulation, and it is located within Elevated Stations (CVL-ES), we can conclude that the Concourse Level ticketing and circulation level in elevated stations is indeed the Concourse Level (CVL-ES-CC).
+Since the Concourse Level (CVL-ES-CC) is a part of Elevated Stations (CVL-ES), we can infer that the ticketing and circulation level in elevated stations is located at the Concourse Level, which is a critical component of the system.
 
 ---
 
 ### N6: Explain rainwater collection on open platforms drainage.
-**Semantic Lookup Latency**: `9390.8ms`  
+**Semantic Lookup Latency**: `7540.8ms`  
 
 #### 📄 Retrieved Node Metadata:
 ```text
@@ -574,12 +566,12 @@ Rainwater collection on open platforms is a part of the platform drainage system
 
 The rainwater collection system on open platforms is a critical component of the overall drainage and water supply system (Node: E&M-DW). This system is crucial for maintaining the overall water management within the Metro Rail system, which has a criticality of High.
 
-In summary, the rainwater collection on open platforms drainage system is a key equipment within the platform drainage system (CVL-ES-PL-03), which is a part of the larger drainage and water supply system (E&M-DW).
+In summary, the rainwater collection on open platforms drainage system is a med-critical system (Node: CVL-ES-PL-03) that is part of the larger drainage and water supply system (Node: E&M-DW), which has a high criticality.
 
 ---
 
 ### N7: What is the platform level passenger boarding level in elevated stations?
-**Semantic Lookup Latency**: `11412.7ms`  
+**Semantic Lookup Latency**: `7702.6ms`  
 
 #### 📄 Retrieved Node Metadata:
 ```text
@@ -590,14 +582,19 @@ Relevant Systems Taxonomy Nodes found:
 ```
 
 #### ✏️ Generated Answer:
-> Based on the provided Systems Taxonomy Nodes, the platform level passenger boarding level in elevated stations is described in Node: Platform Level (CVL-ES-PL) | Level: 3 | Description: None | Key Equipment: Passenger boarding/alighting level | Criticality: High.
+> Based on the provided Systems Taxonomy Nodes, the platform level passenger boarding level in elevated stations is described as follows:
 
-Therefore, the platform level passenger boarding level in elevated stations is at Level 3, as described in Node CVL-ES-PL.
+Node ID: CVL-ES-PL
+Description: None
+Key Equipment: Passenger boarding/alighting level
+Criticality: High
+
+According to the node description, the platform level is where passenger boarding and alighting occur.
 
 ---
 
 ### N8: What type of passenger stations are built on elevated alignment?
-**Semantic Lookup Latency**: `9712.0ms`  
+**Semantic Lookup Latency**: `7010.7ms`  
 
 #### 📄 Retrieved Node Metadata:
 ```text
@@ -608,12 +605,14 @@ Relevant Systems Taxonomy Nodes found:
 ```
 
 #### ✏️ Generated Answer:
-> Based on the provided Systems Taxonomy Nodes, the type of passenger stations built on elevated alignment is described under Node: Elevated Stations (CVL-ES) with a Key Equipment description of "Passenger stations on elevated alignment" (Node ID: CVL-ES).
+> Based on the provided Systems Taxonomy Nodes, the type of passenger stations built on elevated alignment is described under Node: Elevated Stations (CVL-ES) with a Key Equipment description of "Passenger stations on elevated alignment". 
+
+Node ID: CVL-ES
 
 ---
 
 ### N9: Describe the structural box formed by diaphragm walls in station boxes.
-**Semantic Lookup Latency**: `8928.9ms`  
+**Semantic Lookup Latency**: `7724.6ms`  
 
 #### 📄 Retrieved Node Metadata:
 ```text
@@ -631,7 +630,7 @@ The structural box formed by diaphragm walls in station boxes is a critical comp
 ---
 
 ### N10: What are the air distribution chambers for TVS in ventilation plenums?
-**Semantic Lookup Latency**: `16374.9ms`  
+**Semantic Lookup Latency**: `7947.5ms`  
 
 #### 📄 Retrieved Node Metadata:
 ```text
