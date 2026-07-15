@@ -51,7 +51,7 @@ def run_evaluation(queries, tenant_id='default', entity_type=None, contract_stan
             {"role": "system", "content": "Generate a short hypothetical document that would answer the question concisely."},
             {"role": "user", "content": q}
         ]
-        hyde_doc = query_llm(prompt)
+        hyde_doc, _ = query_llm(prompt)
         if hyde_doc and not hyde_doc.startswith('[ERROR]'):
             hyde_emb = embed_model.encode([hyde_doc])[0].tolist()
             hyde_res = retrieve_similar(hyde_emb, tenant_id=tenant_id, entity_type=entity_type, contract_standard=contract_standard, k=TOP_K)
@@ -64,7 +64,7 @@ def run_evaluation(queries, tenant_id='default', entity_type=None, contract_stan
             {"role": "system", "content": "Produce 3 concise paraphrases of the user's question, one per line."},
             {"role": "user", "content": q}
         ]
-        resp = query_llm(paraphrase_prompt)
+        resp, _ = query_llm(paraphrase_prompt)
         paras = []
         if resp and not resp.startswith('[ERROR]'):
             for line in resp.splitlines():

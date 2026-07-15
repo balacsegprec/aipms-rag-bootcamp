@@ -1,9 +1,8 @@
-# src/core/security/database.py
-from src.core.database.connection import get_connection
+from src.core.database.connection import get_connection, get_admin_connection
 from typing import List, Dict, Any
 
 def setup_database_hardening() -> bool:
-    conn = get_connection()
+    conn = get_admin_connection()
     if not conn:
         print("[RLS Setup Warn] Database connection unavailable. Using simulated hardening.")
         return False
@@ -14,6 +13,7 @@ def setup_database_hardening() -> bool:
         if cur.fetchone()[0] == 0:
             cur.execute("""ALTER TABLE rag_documents ADD CONSTRAINT uq_content_hash UNIQUE (content_hash);""")
         cur.execute("ALTER TABLE rag_documents ENABLE ROW LEVEL SECURITY;")
+        cur.execute("ALTER TABLE rag_documents FORCE ROW LEVEL SECURITY;")
         cur.execute("DROP POLICY IF EXISTS tenant_isolation_policy ON rag_documents;")
         cur.execute("""
             CREATE POLICY tenant_isolation_policy ON rag_documents
@@ -42,7 +42,7 @@ def setup_database_hardening() -> bool:
         cur.close()
         conn.close()
 
-def retrieve_with_rls(query_embedding: List[float], tenant_id: str, k: int = 3) -> List[Dict[str, Any]]:
+def retrieve_with_rls(query_embedding: List[float], tenant_id: str, entity_type: str = None, k: int = 3) -> List[Dict[str, Any]]:
     conn = get_connection()
     if not conn:
         return []
@@ -50,11 +50,20 @@ def retrieve_with_rls(query_embedding: List[float], tenant_id: str, k: int = 3) 
         cur = conn.cursor()
         cur.execute("BEGIN;")
         cur.execute("SET LOCAL app.current_tenant_id = %s;", (tenant_id,))
-        cur.execute("""
+        
+        query_sql = """
             SELECT id, tenant_id, entity_type, content, embedding <-> %s::vector as distance
             FROM rag_documents
-            ORDER BY distance LIMIT %s;
-        """, (query_embedding, k))
+        """
+        params = [query_embedding]
+        if entity_type:
+            query_sql += " WHERE entity_type = %s"
+            params.append(entity_type)
+            
+        query_sql += " ORDER BY distance LIMIT %s;"
+        params.append(k)
+        
+        cur.execute(query_sql, tuple(params))
         rows = cur.fetchall()
         cur.execute("COMMIT;")
         return [{"id": r[0], "tenant_id": r[1], "entity_type": r[2], "content": r[3], "distance": r[4]} for r in rows]
@@ -78,6 +87,8 @@ def load_documents_idempotent(documents: List[str], embeddings: List[List[float]
         
     try:
         cur = conn.cursor()
+        cur.execute("BEGIN;")
+        cur.execute("SET LOCAL app.current_tenant_id = %s;", (tenant_id,))
         for idx, (doc, emb) in enumerate(zip(documents, embeddings)):
             doc_hash = calculate_content_hash(doc)
             source_id = f"{entity_type}_{int(time.time())}_{idx}"

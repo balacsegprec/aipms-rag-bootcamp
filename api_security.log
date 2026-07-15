@@ -1,0 +1,2 @@
+{"time": "2026-07-15 16:30:07,720", "name": "api_security", "level": "INFO", "message": "Initializing pgvector table schema on startup..."}
+{"time": "2026-07-15 16:30:07,747", "name": "api_security", "level": "INFO", "message": "Initializing security RLS hardening and audit logging schema..."}

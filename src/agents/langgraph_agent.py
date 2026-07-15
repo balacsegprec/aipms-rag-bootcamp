@@ -9,11 +9,11 @@ from langgraph.graph import StateGraph, END
 from sentence_transformers import SentenceTransformer
 
 
-from src.core.llm import query_llm
+from src.core.llm import query_llm,query_llm_with_provider
 from src.agents.query_router import route_query
 from src.core.database.connection import retrieve_similar
 from src.core.entity_mapper import resolve_entity_types
-from src.core.security import redact_pii
+from src.core.security import redact_pii, retrieve_with_rls
 
 # ================== GLOBAL MODEL ==================
 embed_model = SentenceTransformer("all-MiniLM-L6-v2")
@@ -30,6 +30,7 @@ class AgentState(TypedDict):
     iteration_count: int
     routed_domain: str
     answer: str
+    llm_provider: str
 
 
 # ================== FALLBACK ==================
@@ -129,14 +130,14 @@ def retriever_node(state: AgentState):
 
         for t in tenants:
             for etype in entity_types:
-                results = retrieve_similar(q_emb, t, etype, k=3)
+                results = retrieve_with_rls(q_emb, t, entity_type=etype, k=3)
 
                 if results:
                     retrieval_trace = [
                         {
-                            "id": r[0],
-                            "content": redact_pii(r[1]),
-                            "distance": r[2],
+                            "id": r["id"],
+                            "content": redact_pii(r["content"]),
+                            "distance": r["distance"],
                             "tenant_id": t,
                             "entity_type": etype,
                             "router_domain": domain,
@@ -146,7 +147,7 @@ def retriever_node(state: AgentState):
                         for r in results
                     ]
 
-                    chunks = [redact_pii(r[1]) for r in results]
+                    chunks = [redact_pii(r["content"]) for r in results]
                     break
 
             if chunks:
@@ -187,21 +188,24 @@ def evaluator_node(state: AgentState):
         }
     ]
 
-    res = query_llm(prompt).strip().lower()
+    res, provider = query_llm_with_provider(prompt)
+    res = res.strip().lower()
 
-    # 🔥 FIX 2: safer matching
+    # FIX 2: safer matching
     is_sufficient = "sufficient" in res and "insufficient" not in res
 
     if is_sufficient:
         return {
             "confidence": "high",
-            "iteration_count": state["iteration_count"] + 1
+            "iteration_count": state["iteration_count"] + 1,
+            "llm_provider": provider
         }
 
     return {
         "confidence": "low",
         "iteration_count": state["iteration_count"] + 1,
-        "current_search_query": query
+        "current_search_query": query,
+        "llm_provider": provider
     }
 
 
@@ -210,7 +214,10 @@ def answer_generator_node(state: AgentState):
     chunks = state["retrieved_chunks"]
 
     if not chunks:
-        return {"answer": "I cannot answer this question based on available documents in the system. Please contact the administrator."}
+        return {
+            "answer": "I cannot answer this question based on available documents in the system. Please contact the administrator.",
+            "llm_provider": "none"
+        }
 
     context = "\n\n".join(chunks)
 
@@ -219,7 +226,12 @@ def answer_generator_node(state: AgentState):
         {"role": "user", "content": f"Context:\n{context}\n\nQuestion: {state['query']}"}
     ]
 
-    return {"answer": query_llm(prompt)}
+    ans, provider = query_llm_with_provider(prompt)
+    return {
+        "answer": ans,
+        "llm_provider": provider
+    }
+
 
 
 # ================== ROUTER ==================
@@ -269,7 +281,8 @@ def run_agentic_query(query_text: str, tenant_id: str = "default_strategy"):
         "confidence": "low",
         "iteration_count": 0,
         "routed_domain": "",
-        "answer": ""
+        "answer": "",
+        "llm_provider": "none"
     }
 
     return agent_app.invoke(state)

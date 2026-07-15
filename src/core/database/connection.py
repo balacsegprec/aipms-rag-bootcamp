@@ -18,6 +18,16 @@ def get_connection():
         print(f"[ERROR] DB Connection failed: {e}")
         return None
 
+def get_admin_connection():
+    try:
+        admin_config = DB_CONFIG.copy()
+        admin_config["user"] = "rag_user"
+        admin_config["password"] = "rag_password"
+        return psycopg2.connect(**admin_config)
+    except Exception as e:
+        print(f"[ERROR] Admin DB Connection failed: {e}")
+        return None
+
 def check_table_exists():
     """Returns True if rag_documents table exists and has rows."""
     conn = get_connection()
@@ -52,7 +62,7 @@ def init_pgvector():
     The ivfflat vector index is deferred to build_vector_index() which
     must be called AFTER data is loaded (ivfflat requires rows to exist).
     """
-    conn = get_connection()
+    conn = get_admin_connection()
     if not conn:
         return False
         
@@ -101,7 +111,7 @@ def build_vector_index():
     """Build ivfflat vector index. MUST be called after data is loaded.
     ivfflat requires at least 1 row to exist before index creation.
     """
-    conn = get_connection()
+    conn = get_admin_connection()
     if not conn:
         return False
     try:
@@ -149,6 +159,8 @@ def load_documents(documents, embeddings, entity_type="general", tenant_id="defa
         
     try:
         cur = conn.cursor()
+        cur.execute("BEGIN;")
+        cur.execute("SET LOCAL app.current_tenant_id = %s;", (tenant_id,))
         
         # Prepare data
         data = []
@@ -197,6 +209,9 @@ def retrieve_similar(query_embedding, tenant_id="default", entity_type=None, con
         
     try:
         cur = conn.cursor()
+        cur.execute("BEGIN;")
+        cur.execute("SET LOCAL app.current_tenant_id = %s;", (tenant_id,))
+        
         query_sql = """
             SELECT id, content, embedding <-> %s::vector as distance 
             FROM rag_documents 
@@ -217,7 +232,8 @@ def retrieve_similar(query_embedding, tenant_id="default", entity_type=None, con
 
         cur.execute(query_sql, tuple(params))
         raw_results = cur.fetchall()
-
+        cur.execute("COMMIT;")
+        
         print(
             f"[DEBUG][retriever] raw_results_count={len(raw_results)} "
             f"tenant_id={tenant_id} entity_type={entity_type} "
@@ -254,6 +270,8 @@ def retrieve_trgm(query_text, tenant_id="default", entity_type=None, contract_st
         return []
     try:
         cur = conn.cursor()
+        cur.execute("BEGIN;")
+        cur.execute("SET LOCAL app.current_tenant_id = %s;", (tenant_id,))
         
         query_sql = "SELECT id, content, similarity(content, %s) as distance FROM rag_documents WHERE tenant_id = %s AND content %% %s"
         params = [query_text, tenant_id, query_text]
@@ -270,7 +288,9 @@ def retrieve_trgm(query_text, tenant_id="default", entity_type=None, contract_st
         params.append(k)
         
         cur.execute(query_sql, tuple(params))
-        return cur.fetchall()
+        results = cur.fetchall()
+        cur.execute("COMMIT;")
+        return results
     except Exception as e:
         print(f"[ERROR] Trgm retrieval failed: {e}")
         return []

@@ -5,10 +5,11 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-def query_llm(messages, temperature=0.1, max_retries=2, timeout=10.0):
+def query_llm_with_provider(messages, temperature=0.1, max_retries=2, timeout=10.0):
     """
     Query LLM with sequential fallback providers.
     Handles timeouts, retries, and sequential failover.
+    Returns a tuple of (response_text, provider_name).
     """
     providers = [
         {
@@ -44,27 +45,31 @@ def query_llm(messages, temperature=0.1, max_retries=2, timeout=10.0):
         for attempt in range(max_retries):
             try:
                 if p["name"] == "google":
-                    from langchain_google_genai import ChatGoogleGenerativeAI
-                    from langchain_core.messages import HumanMessage, SystemMessage
-                    
-                    llm = ChatGoogleGenerativeAI(
-                        model=p["model"],
-                        google_api_key=p["api_key"],
-                        temperature=temperature,
-                        timeout=timeout
-                    )
-                    
-                    # Convert dict messages to LangChain message objects
-                    lc_messages = []
-                    for m in messages:
-                        if m["role"] == "system":
-                            lc_messages.append(SystemMessage(content=m["content"]))
-                        else:
-                            lc_messages.append(HumanMessage(content=m["content"]))
-                    
-                    response_text = llm.invoke(lc_messages).content
-                    print(f"[INFO] Successfully used provider: {p['name']}")
-                    return response_text
+                    try:
+                        from langchain_google_genai import ChatGoogleGenerativeAI
+                        from langchain_core.messages import HumanMessage, SystemMessage
+                        
+                        llm = ChatGoogleGenerativeAI(
+                            model=p["model"],
+                            google_api_key=p["api_key"],
+                            temperature=temperature,
+                            timeout=timeout
+                        )
+                        
+                        # Convert dict messages to LangChain message objects
+                        lc_messages = []
+                        for m in messages:
+                            if m["role"] == "system":
+                                lc_messages.append(SystemMessage(content=m["content"]))
+                            else:
+                                lc_messages.append(HumanMessage(content=m["content"]))
+                        
+                        response_text = llm.invoke(lc_messages).content
+                        print(f"[INFO] Successfully used provider: {p['name']}")
+                        return response_text, p["name"]
+                    except Exception as google_err:
+                        print(f"[WARN] Google Gemini provider initialization failed: {str(google_err)[:100]}...")
+                        break  # Skip to next provider
                 else:
                     client = OpenAI(
                         base_url=p["base_url"],
@@ -77,7 +82,7 @@ def query_llm(messages, temperature=0.1, max_retries=2, timeout=10.0):
                         temperature=temperature
                     )
                     print(f"[INFO] Successfully used provider: {p['name']}")
-                    return response.choices[0].message.content
+                    return response.choices[0].message.content, p["name"]
             except Exception as e:
                 print(f"[WARN] {p['name']} attempt {attempt + 1} failed: {str(e)[:100]}...")
                 time.sleep(5) # wait before retry
@@ -85,7 +90,15 @@ def query_llm(messages, temperature=0.1, max_retries=2, timeout=10.0):
         # If all retries for this provider fail, move to the next provider
         print(f"[WARN] Provider {p['name']} exhausted. Failing over to next provider.")
         
-    return "[ERROR] LLM unavailable"
+    return "[ERROR] LLM unavailable", "none"
+
+
+def query_llm(messages, temperature=0.1, max_retries=2, timeout=10.0):
+    """
+    Query LLM with sequential fallback providers. Returns a tuple of (response_text, provider_name).
+    """
+    return query_llm_with_provider(messages, temperature, max_retries, timeout)
+
 
 from langchain_core.language_models.chat_models import BaseChatModel
 from langchain_core.messages import BaseMessage, HumanMessage, SystemMessage
@@ -111,9 +124,10 @@ class RobustLLM(BaseChatModel):
             elif "ai" in m.type: role = "assistant"
             dict_messages.append({"role": role, "content": m.content})
             
-        answer = query_llm(dict_messages, temperature=self.temperature)
+        answer, provider = query_llm_with_provider(dict_messages, temperature=self.temperature)
         
-        return ChatResult(generations=[ChatGeneration(message=HumanMessage(content=answer))])
+        return ChatResult(generations=[ChatGeneration(message=HumanMessage(content=answer), generation_info={"provider": provider})])
+
 
     def _get_ls_params(self, **kwargs: Any) -> Any:
         return {"model": "robust-fallback"}

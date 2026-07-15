@@ -49,7 +49,7 @@ def ask_rag(query, tenant_id="default", entity_type=None, contract_standard=None
                 {"role": "system", "content": "You are a helpful assistant that writes a short hypothetical document that would answer the user's question. Keep it focused and factual."},
                 {"role": "user", "content": f"Generate a concise hypothetical document that directly answers: {query}"}
             ]
-            hyde_doc = query_llm(prompt)
+            hyde_doc, _ = query_llm(prompt)
             if not hyde_doc or hyde_doc.startswith("[ERROR]"):
                 return {
                     "query": query,
@@ -68,7 +68,7 @@ def ask_rag(query, tenant_id="default", entity_type=None, contract_standard=None
                 {"role": "system", "content": "You are a concise paraphraser. Produce 3 diverse rephrasings of the user's question, each on its own line."},
                 {"role": "user", "content": f"Rephrase: {query}"}
             ]
-            resp = query_llm(prompt)
+            resp, _ = query_llm(prompt)
             paraphrases = []
             if resp and not resp.startswith("[ERROR]"):
                 for line in resp.splitlines():
@@ -157,7 +157,7 @@ def ask_rag(query, tenant_id="default", entity_type=None, contract_standard=None
         {"role": "user", "content": f"Context:\n{combined_context}\n\nQuestion: {query}"}
     ]
     
-    answer = query_llm(messages)
+    answer, _ = query_llm(messages)
     
     return {
         "query": query,

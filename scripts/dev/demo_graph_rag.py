@@ -191,14 +191,16 @@ def run_benchmark():
             {"role": "system", "content": "You are a helpful Metro Rail construction assistant. Answer the query strictly based on the provided context. If the context does not contain the answer, reply: 'Insufficient context to answer.'"},
             {"role": "user", "content": f"Query: {query}\n\nContext:\n{naive_context}"}
         ]
-        ans_naive = query_llm(prompt_naive, temperature=0.0).strip()
+        ans_naive_text, _ = query_llm(prompt_naive, temperature=0.0)
+        ans_naive = ans_naive_text.strip()
         
         # GraphRAG LLM Answer
         prompt_graph = [
             {"role": "system", "content": "You are a professional Metro Rail Systems Auditor. Synthesize a structured, clear answer using the provided taxonomy graph context. Cite node IDs (e.g. [RST], [SIG])."},
             {"role": "user", "content": f"Query: {query}\n\nContext:\n{graph_context}"}
         ]
-        ans_graph = query_llm(prompt_graph, temperature=0.0).strip()
+        ans_graph_text, _ = query_llm(prompt_graph, temperature=0.0)
+        ans_graph = ans_graph_text.strip()
         
         is_success = "insufficient context" not in ans_naive.lower() and len(ans_naive) > 30
         status = "❌ Naive FAILED (No relational data) | GraphRAG PASSED ✅" if not is_success else "Both PASSED ✅"
@@ -238,7 +240,8 @@ def run_benchmark():
             {"role": "system", "content": "You are a helpful Metro Rail engineer. Answer the query strictly based on the provided systems taxonomy node descriptions. Cite the node ID."},
             {"role": "user", "content": f"Query: {query}\n\nTaxonomy Nodes Context:\n{nodes_context}"}
         ]
-        ans = query_llm(prompt, temperature=0.0).strip()
+        ans_text, _ = query_llm(prompt, temperature=0.0)
+        ans = ans_text.strip()
         
         print(f"-> Latency: {latency_ms:.1f}ms")
         print(f"-> Answer: {ans[:150]}...")

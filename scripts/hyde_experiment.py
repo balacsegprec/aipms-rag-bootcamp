@@ -75,7 +75,7 @@ def hyde_retrieval(query, hyde_count=HYDE_COUNT, top_k=TOP_K):
 
     hyde_text = None
     try:
-        hyde_text = query_llm(prompt)
+        hyde_text, _ = query_llm(prompt)
     except Exception as e:
         print(f"[WARN] HyDE LLM call failed: {e}")
 

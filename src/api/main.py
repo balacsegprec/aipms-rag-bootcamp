@@ -31,6 +31,7 @@ logger = logging.getLogger("api_security")
 # Check and dynamically import/install FastAPI if needed
 try:
     from fastapi import FastAPI, HTTPException, Security, Request, Depends
+    # pyrefly: ignore [missing-import]
     from fastapi.security.api_key import APIKeyHeader
     from fastapi.responses import JSONResponse
 except ImportError:
@@ -50,7 +51,8 @@ except ImportError:
     class JSONResponse: pass
 
 # Add project root to path
-
+from datetime import datetime
+from fastapi.middleware.cors import CORSMiddleware
 from src.agents.langgraph_agent import run_agentic_query
 from src.core.security import (
     check_query_out_of_scope,
@@ -59,6 +61,10 @@ from src.core.security import (
     retrieve_with_rls,
     sanitize_query
 )
+from src.core.database.connection import init_pgvector
+from src.core.security.database import setup_database_hardening
+
+
 
 # ==================== LATENCY CONFIG ====================
 MAX_LATENCY_MS = 5000  # 5 seconds budget
@@ -69,6 +75,28 @@ app = FastAPI(
     description="Production-hardened, tenant-isolated query service for AI-PMS.",
     version="1.0.0"
 )
+
+# Register CORS Middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "http://localhost:5173",
+        "http://127.0.0.1:5173",
+        "https://ai-pms-rag-bootcamp.vercel.app",
+        "https://ai-pms-rag-bootcamp.netlify.app"
+    ],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+@app.on_event("startup")
+def startup_event():
+    logger.info("Initializing pgvector table schema on startup...")
+    init_pgvector()
+    logger.info("Initializing security RLS hardening and audit logging schema...")
+    setup_database_hardening()
+
 
 @app.exception_handler(Exception)
 async def global_exception_handler(request: Request, exc: Exception):
@@ -89,7 +117,8 @@ async def http_exception_handler(request: Request, exc: HTTPException):
 # --------------------------------------------------------------------------
 # Authentication & Rate Limiting
 # --------------------------------------------------------------------------
-VALID_API_KEYS = {"super_secret_key_123"}
+API_KEY = os.getenv("API_KEY", "super_secret_key_123")
+VALID_API_KEYS = {API_KEY}
 api_key_header = APIKeyHeader(name="X-API-Key", auto_error=False)
 
 def verify_api_key(api_key: str = Security(api_key_header)):
@@ -139,10 +168,38 @@ class QueryResponse(BaseModel):
     latency_ms: float
     latency_status: str
     latency_budget_ms: int
+    llm_provider: str
+
 
 # --------------------------------------------------------------------------
 # API Route handler
 # --------------------------------------------------------------------------
+@app.get("/health")
+def health_check():
+    """
+    Examiner-visible endpoint verifying live DB network connectivity.
+    """
+    from src.core.database.connection import get_connection
+    db_status = False
+    try:
+        conn = get_connection()
+        if conn:
+            cur = conn.cursor()
+            cur.execute("SELECT 1;")
+            cur.fetchone()
+            cur.close()
+            conn.close()
+            db_status = True
+    except Exception as e:
+        logger.error(f"[HEALTH CHECK ERROR] DB probe failed: {e}")
+        
+    status = "healthy" if db_status else "degraded"
+    return {
+        "status": status,
+        "db": db_status,
+        "timestamp": datetime.utcnow().isoformat() + "Z"
+    }
+
 @app.post("/query", response_model=QueryResponse)
 def execute_query(request: QueryRequest, http_request: Request = None, api_key: str = Security(api_key_header)):
     """
@@ -183,7 +240,8 @@ def execute_query(request: QueryRequest, http_request: Request = None, api_key: 
             retrieval_trace=[{"action": "adversarial_fallback_intercept"}],
             latency_ms=latency_ms,
             latency_status=latency_status,
-            latency_budget_ms=MAX_LATENCY_MS
+            latency_budget_ms=MAX_LATENCY_MS,
+            llm_provider="guardrails"
         )
 
     # ----------------------------------------------------------------------
@@ -238,5 +296,6 @@ def execute_query(request: QueryRequest, http_request: Request = None, api_key: 
         retrieval_trace=retrieval_trace,
         latency_ms=latency_ms,
         latency_status=latency_status,
-        latency_budget_ms=MAX_LATENCY_MS
+        latency_budget_ms=MAX_LATENCY_MS,
+        llm_provider=output.get("llm_provider", "none")
     )

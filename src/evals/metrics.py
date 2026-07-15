@@ -58,7 +58,7 @@ Example: {{"faithfulness": 1.0, "relevance": 0.8}}
     messages = [{"role": "user", "content": prompt}]
     
     # We use lower temperature for evaluation
-    response_text = query_llm(messages, temperature=0.0)
+    response_text, _ = query_llm(messages, temperature=0.0)
     
     if "[ERROR]" in response_text:
         return {"faithfulness": 0.0, "relevance": 0.0, "error": "LLM evaluation failed"}

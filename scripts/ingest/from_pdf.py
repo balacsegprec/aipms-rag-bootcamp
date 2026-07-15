@@ -17,7 +17,7 @@ def generate_document_context(raw_text, file_name):
         {"role": "system", "content": "You are a helpful assistant. Write a 2-3 sentence summary of the following document to provide context for its individual chunks."},
         {"role": "user", "content": f"Document Name: {file_name}\n\nDocument Text:\n{text_sample}"}
     ]
-    summary = query_llm(prompt)
+    summary, _ = query_llm(prompt)
     if summary and not summary.startswith("[ERROR]"):
         return summary.strip()
     return f"Context from document: {file_name}"

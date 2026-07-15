@@ -71,7 +71,7 @@ def route_query(query_text):
     ]
     
     try:
-        llm_response = query_llm(messages, temperature=0.0)
+        llm_response, _ = query_llm(messages, temperature=0.0)
         
         if llm_response and not llm_response.startswith("[ERROR]"):
             clean_res = llm_response.strip().lower()

@@ -3,6 +3,9 @@ from pathlib import Path
 from pydantic_settings import BaseSettings
 import os
 from typing import Optional
+from dotenv import load_dotenv
+
+load_dotenv()
 
 class Settings(BaseSettings):
     PROJECT_ROOT: Path = Path(__file__).resolve().parents[2]
